@@ -1,1 +1,1 @@
-# skillgraph-ai
+# Skillgraph-ai
