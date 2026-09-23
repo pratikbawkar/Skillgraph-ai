@@ -54,7 +54,7 @@ def test_get_progress_valid_role_returns_full_breakdown(client):
     body = response.json()
     assert body["roleId"] == "python-developer"
     assert isinstance(body["overallPercentage"], int)
-    assert len(body["skillProgress"]) == 5
+    assert len(body["skillProgress"]) == 7
     first_skill = body["skillProgress"][0]
     assert set(first_skill.keys()) == {"skillId", "breakdown", "totalPercentage"}
     assert set(first_skill["breakdown"].keys()) == {
