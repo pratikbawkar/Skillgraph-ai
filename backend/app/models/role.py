@@ -139,7 +139,10 @@ _CLOUD_ENGINEER = RoleModel(
             id="ce-linux-fundamentals",
             name="Linux Fundamentals",
             category="Operating Systems",
-            description="Shell basics, file systems, permissions, and process management on the Linux hosts most cloud workloads run on.",
+            description=(
+                "Shell basics, file systems, permissions, and process "
+                "management on the Linux hosts most cloud workloads run on."
+            ),
             importance="core",
             difficulty="beginner",
             prerequisites=(),
@@ -154,7 +157,10 @@ _CLOUD_ENGINEER = RoleModel(
             id="ce-cost-optimization",
             name="Cost Optimization & Billing",
             category="FinOps",
-            description="Reading cost/usage reports, rightsizing resources, and applying budgets and alerts.",
+            description=(
+                "Reading cost/usage reports, rightsizing resources, "
+                "and applying budgets and alerts."
+            ),
             importance="important",
             difficulty="intermediate",
             prerequisites=("ce-compute", "ce-storage"),
