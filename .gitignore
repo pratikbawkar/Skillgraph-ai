@@ -1,0 +1,29 @@
+# Root-level ignore rules (plan.md section 12). Frontend has its own
+# frontend/.gitignore for Next.js-specific patterns.
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+
+terraform.tfstate
+terraform.tfstate.*
+.terraform/
+
+node_modules/
+
+# Python (backend/)
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+*.egg-info/
+.venv/
+venv/
+
+playwright-report/
