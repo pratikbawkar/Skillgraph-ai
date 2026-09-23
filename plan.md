@@ -46,6 +46,44 @@ The product should focus on turning learning into **measurable capability**, not
 8. Progress dashboard.
 9. Production AWS deployment with a public URL.
 10. Automated CI/CD with strong testing, linting, security checks, and Codecov.
+11. Support exactly three curated target roles for the MVP: Cloud Engineer, DevOps Engineer, and Python Developer.
+12. Show an overall role-progress percentage for every user.
+13. Show an individual progress bar and percentage for every skill in the selected role.
+14. Provide an `i` (information) control for every skill that opens skill details and one admin-curated YouTube learning resource.
+15. Keep skill-progress calculations transparent and explainable; do not use an opaque LLM-generated score as the sole source of progress.
+
+### MVP skill-progress model
+
+The progress calculation must be deterministic and visible to the user. The initial skill-progress model is:
+
+```text
+Self assessment     20%
+Objective quiz       30%
+Practical project    30%
+Evidence submitted   20%
+--------------------------
+Skill progress       100%
+```
+
+Rules:
+- A missing component contributes `0` until the user completes it.
+- The UI must show which components contributed to the current percentage.
+- The weights may be revised later only through a documented product decision / ADR.
+- The overall role-progress percentage is derived from the progress of the skills required by that role.
+- The MVP should use the same deterministic calculation for every user; personalization affects recommendations, not the scoring formula.
+
+### MVP learning resources
+
+Each skill in the curated skill graph must have one admin-managed recommended YouTube resource. The MVP does not require YouTube search integration.
+
+Each skill resource record should contain at minimum:
+- Skill identifier.
+- Video title.
+- YouTube URL.
+- Optional short reason/recommendation note.
+- Admin/content owner metadata.
+
+Users access the resource through the skill's `i` button. AI must not silently replace or invent the curated URL.
 
 ### Non-goals for MVP
 
