@@ -13,7 +13,7 @@ export function Navbar() {
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <Link
           href="/"
-          className="bg-gradient-to-r from-brand to-role-python bg-clip-text text-lg font-bold text-transparent"
+          className="text-lg font-bold text-brand dark:text-brand-light"
         >
           SkillGraph
         </Link>
