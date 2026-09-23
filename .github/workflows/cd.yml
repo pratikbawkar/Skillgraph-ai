@@ -28,7 +28,7 @@ jobs:
           cd backend
           pip install --upgrade --only-binary :all: pydantic-core
           pip install -q -r requirements.txt
-          pip install -q pytest
+          pip install -q pytest httpx
           python -m pytest tests/integration/test_health_api.py -v
 
       - name: Verify frontend build
