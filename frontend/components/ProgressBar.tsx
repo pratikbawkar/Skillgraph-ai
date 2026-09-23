@@ -9,9 +9,9 @@ export function ProgressBar({ percentage, label }: ProgressBarProps) {
   return (
     <div>
       {label && (
-        <div className="mb-1 flex justify-between text-xs text-gray-600">
+        <div className="mb-1 flex justify-between text-xs text-gray-600 dark:text-gray-400">
           <span>{label}</span>
-          <span>{clamped}%</span>
+          <span className="font-medium text-brand dark:text-brand-light">{clamped}%</span>
         </div>
       )}
       <div
@@ -19,10 +19,10 @@ export function ProgressBar({ percentage, label }: ProgressBarProps) {
         aria-valuenow={clamped}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="h-2 w-full overflow-hidden rounded-full bg-gray-200"
+        className="h-2 w-full overflow-hidden rounded-full bg-indigo-100 dark:bg-gray-800"
       >
         <div
-          className="h-full rounded-full bg-brand transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-brand to-role-python transition-all"
           style={{ width: `${clamped}%` }}
         />
       </div>

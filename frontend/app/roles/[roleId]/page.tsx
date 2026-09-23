@@ -26,8 +26,8 @@ export default async function RolePage({ params }: RolePageProps) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">{role.name}</h1>
-        <p className="mt-1 text-gray-600">{role.description}</p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{role.name}</h1>
+        <p className="mt-1 text-gray-600 dark:text-gray-400">{role.description}</p>
         <div className="mt-4 max-w-sm">
           <ProgressBar
             percentage={progress.overallPercentage}
@@ -46,17 +46,17 @@ export default async function RolePage({ params }: RolePageProps) {
 
       {role.suggestedProjects.length > 0 && (
         <div className="mt-8">
-          <h2 className="mb-3 text-lg font-medium text-gray-900">
+          <h2 className="mb-3 text-lg font-medium text-gray-900 dark:text-gray-100">
             Suggested projects
           </h2>
           <ul className="space-y-2">
             {role.suggestedProjects.map((project) => (
               <li
                 key={project.id}
-                className="rounded border border-gray-200 bg-white p-3"
+                className="rounded-lg border border-indigo-100 bg-white p-3 dark:border-gray-800 dark:bg-gray-900"
               >
-                <p className="font-medium text-gray-900">{project.title}</p>
-                <p className="text-sm text-gray-600">{project.description}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{project.title}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{project.description}</p>
               </li>
             ))}
           </ul>
