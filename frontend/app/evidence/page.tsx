@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { fetchRoles, submitEvidence } from '@/lib/api-client';
-import type { Role } from '@/lib/types';
+import type { EvidenceEvaluation, Role } from '@/lib/types';
 
 export default function EvidencePage() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -12,7 +12,7 @@ export default function EvidencePage() {
   const [links, setLinks] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [evaluation, setEvaluation] = useState<EvidenceEvaluation | null>(null);
 
   useEffect(() => {
     fetchRoles()
@@ -23,7 +23,7 @@ export default function EvidencePage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
-    setSubmitted(false);
+    setEvaluation(null);
 
     if (!skillId) {
       setError('Please select a skill.');
@@ -40,8 +40,8 @@ export default function EvidencePage() {
         .split('\n')
         .map((link) => link.trim())
         .filter(Boolean);
-      await submitEvidence({ skillId, description, links: linkList });
-      setSubmitted(true);
+      const result = await submitEvidence({ skillId, description, links: linkList });
+      setEvaluation(result);
       setDescription('');
       setLinks('');
     } catch {
@@ -120,12 +120,6 @@ export default function EvidencePage() {
               {error}
             </p>
           )}
-          {submitted && (
-            <p role="status" className="text-sm text-green-700">
-              Evidence submitted. You will see AI-generated findings on your
-              dashboard once evaluation is available.
-            </p>
-          )}
 
           <button
             type="submit"
@@ -135,6 +129,44 @@ export default function EvidencePage() {
             {isSubmitting ? 'Submitting…' : 'Submit evidence'}
           </button>
         </form>
+      )}
+
+      {evaluation && (
+        <div role="status" className="mt-6 rounded border border-gray-200 bg-white p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-medium text-gray-900">AI findings</h2>
+            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+              Confidence: {evaluation.findings.confidence}
+            </span>
+          </div>
+          <p className="text-sm text-gray-700">{evaluation.findings.summary}</p>
+
+          {evaluation.findings.matchedCriteria.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-gray-500">Matched</p>
+              <ul className="mt-1 list-inside list-disc text-sm text-gray-700">
+                {evaluation.findings.matchedCriteria.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {evaluation.findings.missingCriteria.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-gray-500">Missing</p>
+              <ul className="mt-1 list-inside list-disc text-sm text-gray-700">
+                {evaluation.findings.missingCriteria.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p className="mt-3 text-xs text-gray-400">
+            This is a summary, not a pass/fail decision.
+          </p>
+        </div>
       )}
     </div>
   );

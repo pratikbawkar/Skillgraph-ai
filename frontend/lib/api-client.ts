@@ -8,7 +8,7 @@
  * mock backend/AWS-backed calls rather than depending on real services.
  */
 import { ROLES, getRoleById, getMockRoleProgress } from './mock-data';
-import type { EvidenceSubmission, Role, RoleProgress, UserProfile } from './types';
+import type { EvidenceEvaluation, Role, RoleProgress, UserProfile } from './types';
 
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== 'false';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
@@ -92,17 +92,21 @@ export async function submitEvidence(input: {
   skillId: string;
   description: string;
   links: string[];
-}): Promise<EvidenceSubmission> {
+}): Promise<EvidenceEvaluation> {
   if (USE_MOCKS) {
     return {
-      id: `mock-evidence-${Date.now()}`,
-      skillId: input.skillId,
-      description: input.description,
-      links: input.links,
-      submittedAt: new Date().toISOString(),
+      submissionId: `mock-evidence-${Date.now()}`,
+      findings: {
+        summary: 'Mock evaluation: evidence recorded locally, no backend evaluation available.',
+        relevantSkillIds: [input.skillId],
+        matchedCriteria: [],
+        missingCriteria: [],
+        confidence: 'low',
+      },
+      evaluatedAt: new Date().toISOString(),
     };
   }
-  return apiFetch<EvidenceSubmission>('/evidence', {
+  return apiFetch<EvidenceEvaluation>('/evidence', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
