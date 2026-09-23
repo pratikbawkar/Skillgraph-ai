@@ -26,8 +26,9 @@ jobs:
       - name: Verify backend health
         run: |
           cd backend
-          pip install --only-binary :all: pydantic-core
+          pip install --upgrade --only-binary :all: pydantic-core
           pip install -q -r requirements.txt
+          pip install -q pytest
           python -m pytest tests/integration/test_health_api.py -v
 
       - name: Verify frontend build
