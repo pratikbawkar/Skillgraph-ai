@@ -13,30 +13,30 @@
     "test:coverage": "vitest --run --coverage"
   },
   "dependencies": {
+    "next": "^15.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "next": "^15.0.0",
     "typescript": "^5.6.2"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
+    "@types/node": "^24.13.6",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^8.70.1",
+    "@typescript-eslint/parser": "^8.70.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^5.0.1",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.56.0",
     "eslint-config-next": "^15.0.0",
+    "jsdom": "^23.0.1",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
-    "vite": "^5.4.11",
-    "vitest": "^1.1.0",
-    "jsdom": "^23.0.1",
-    "@vitejs/plugin-react": "^4.2.1",
-    "@vitest/coverage-v8": "^1.6.1"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   },
   "overrides": {
     "postcss": "^8.4.38"
