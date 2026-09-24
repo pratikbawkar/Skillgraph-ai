@@ -1,0 +1,37 @@
+# Vercel build ignore patterns (plan.md Phase 2)
+# Only frontend is deployed to Vercel; backend stays on AWS Lambda in Phase 2+
+
+# Root-level files (not needed for Vercel)
+.git
+.gitignore
+.github
+.env
+.env.*
+plan.md
+README.md
+CONTRIBUTING.md
+SECURITY.md
+CODEOWNERS
+
+# Backend (not deployed to Vercel; stays on AWS Lambda)
+backend/
+infrastructure/
+
+# Development/test outputs
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+playwright-report/
+
+# Build artifacts (Next.js generates its own)
+.next/
+out/
+dist/
+
+# Dependencies (Vercel installs fresh)
+node_modules/
+.venv/
+venv/

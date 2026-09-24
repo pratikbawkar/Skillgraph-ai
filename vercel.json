@@ -1,0 +1,35 @@
+{
+  "$schema": "https://openapi.vercel.sh",
+  "version": 2,
+  "name": "skillgraph-ai",
+  "builds": [
+    {
+      "src": "frontend",
+      "use": "@vercel/next@latest"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ],
+  "projectSettings": {
+    "installCommand": "cd frontend && npm install",
+    "buildCommand": "cd frontend && npm run build",
+    "outputDirectory": "frontend/.next",
+    "framework": "nextjs"
+  },
+  "env": {
+    "NEXT_PUBLIC_USE_MOCKS": "true",
+    "NEXT_PUBLIC_API_BASE_URL": "@api_base_url"
+  },
+  "envUrl": "https://www.notion.so/SkillGraph-Environment-Variables-docs",
+  "regions": ["iad1"],
+  "functions": {
+    "frontend/app/**": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}
