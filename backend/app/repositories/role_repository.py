@@ -7,11 +7,17 @@ perspective. A Phase 2 DynamoDB-backed repository would implement the same
 
 from __future__ import annotations
 
-from app.models.role import SEED_ROLES, RoleModel, SkillModel
+from app.models.role import (
+    SEED_ROLES,
+    LearningResourceModel,
+    RoleModel,
+    SkillModel,
+    SuggestedProjectModel,
+)
 from app.schemas.role import LearningResource, Role, Skill, SuggestedProject
 
 
-def _to_schema_learning_resource(model: object) -> LearningResource:
+def _to_schema_learning_resource(model: LearningResourceModel) -> LearningResource:
     return LearningResource(
         skill_id=model.skill_id,
         video_title=model.video_title,
@@ -34,7 +40,7 @@ def _to_schema_skill(model: SkillModel) -> Skill:
     )
 
 
-def _to_schema_project(model: object) -> SuggestedProject:
+def _to_schema_project(model: SuggestedProjectModel) -> SuggestedProject:
     return SuggestedProject(
         id=model.id,
         title=model.title,

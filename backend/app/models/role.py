@@ -14,6 +14,10 @@ goal 11): Cloud Engineer, DevOps Engineer, Python Developer.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
+
+SkillImportance = Literal["core", "important", "nice-to-have"]
+SkillDifficulty = Literal["beginner", "intermediate", "advanced"]
 
 
 @dataclass(frozen=True)
@@ -31,8 +35,8 @@ class SkillModel:
     name: str
     category: str
     description: str
-    importance: str
-    difficulty: str
+    importance: SkillImportance
+    difficulty: SkillDifficulty
     prerequisites: tuple[str, ...]
     learning_resource: LearningResourceModel
 

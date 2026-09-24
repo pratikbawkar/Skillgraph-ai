@@ -22,7 +22,7 @@ import re
 
 from app.core.config import get_settings
 from app.models.role import SkillModel
-from app.schemas.evidence import EvidenceFinding
+from app.schemas.evidence import EvidenceConfidence, EvidenceFinding
 
 _WORD_RE = re.compile(r"[a-zA-Z0-9]+")
 _MIN_KEYWORD_LENGTH = 3
@@ -56,6 +56,7 @@ def _evaluate_heuristic(
     has_link = any(link.strip() for link in links)
     overlap_ratio = len(matched) / len(skill_keywords) if skill_keywords else 0.0
 
+    confidence: EvidenceConfidence
     if overlap_ratio >= 0.5 and has_link:
         confidence = "high"
     elif overlap_ratio >= 0.2 or has_link:

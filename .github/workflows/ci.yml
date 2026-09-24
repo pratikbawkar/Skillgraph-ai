@@ -32,7 +32,7 @@ jobs:
           cd backend
           pip install --upgrade --only-binary :all: pydantic-core
           pip install -r requirements.txt
-          pip install pytest pytest-cov httpx ruff
+          pip install pytest pytest-cov httpx ruff mypy bandit pip-audit
 
       - name: Lint backend with ruff
         run: |
@@ -42,34 +42,30 @@ jobs:
       - name: Type check backend
         run: |
           cd backend
-          python -m pip install mypy
-          mypy app --ignore-missing-imports --no-error-summary || true
+          mypy app --ignore-missing-imports --no-error-summary
 
       - name: Security check backend (bandit)
         run: |
           cd backend
-          python -m pip install bandit
-          bandit -r app --severity-level=medium 2>/dev/null || true
+          bandit -r app --severity-level=medium
 
       - name: Dependency audit backend
         run: |
           cd backend
-          python -m pip install pip-audit
-          pip-audit --desc 2>/dev/null || true
+          pip-audit --desc
 
       - name: Run backend tests with coverage
         run: |
           cd backend
-          pytest --cov=app --cov-report=xml --cov-report=term tests/
+          pytest --cov=app --cov-report=xml --cov-report=term --cov-fail-under=80 tests/
 
       - name: Upload backend coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage.xml
           flags: backend
           name: backend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
   frontend-test:
     runs-on: ubuntu-latest
@@ -80,7 +76,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -107,13 +103,12 @@ jobs:
       - name: Security audit frontend dependencies
         run: |
           cd frontend
-          npm audit --audit-level=moderate 2>/dev/null || true
+          npm audit --audit-level=moderate
 
       - name: Upload frontend coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./frontend/coverage/coverage-final.json
           flags: frontend
           name: frontend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
