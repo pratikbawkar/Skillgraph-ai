@@ -1,0 +1,46 @@
+name: CD
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy-verification:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify backend health
+        run: |
+          cd backend
+          pip install --upgrade --only-binary :all: pydantic-core
+          pip install -q -r requirements.txt
+          pip install -q pytest httpx
+          python -m pytest tests/integration/test_health_api.py -v
+
+      - name: Verify frontend build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Log deployment status
+        run: |
+          echo "✅ All deployment verification checks passed!"
+          echo "✅ Code is ready for Phase 2 AWS deployment"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
+          git log --oneline -5

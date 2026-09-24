@@ -266,7 +266,28 @@ Phase 3 exit criteria:
 
 ## 5. AWS Architecture
 
-The application should remain primarily serverless and cost-conscious.
+The application is designed as a cost-efficient serverless system.
+
+### Backend: Lambda with Mangum/FastAPI
+
+```text
+API Gateway HTTP API
+        ↓
+      Lambda
+        ↓
+  Mangum ASGI Adapter
+        ↓
+    FastAPI app
+```
+
+The backend is a standard FastAPI application wrapped with Mangum (an ASGI-to-Lambda adapter). This allows the same FastAPI code to run:
+- Locally with `uvicorn app.main:app --reload`
+- In Phase 2 AWS Lambda via `handler.handler` (see `backend/handler.py`)
+- Without any Lambda-specific decorators or changes to core business logic
+
+The handler is already prepared in `backend/handler.py` and will be deployed to AWS Lambda during Phase 2.
+
+### Full application architecture
 
 ```text
                         INTERNET
@@ -276,10 +297,14 @@ The application should remain primarily serverless and cost-conscious.
                     Next.js UI
                            │
                            ▼
-                   API Gateway HTTP
+                   API Gateway HTTP API
                            │
                            ▼
                         Lambda
+                           │
+                       Mangum
+                           ↓
+                      FastAPI app
                            │
               ┌────────────┼────────────┐
               ▼            ▼            ▼
@@ -300,6 +325,7 @@ The application should remain primarily serverless and cost-conscious.
 - Use IAM least privilege.
 - Use CloudWatch for AWS logs and operational monitoring.
 - Do not introduce infrastructure simply for demonstration if it increases cost without product value.
+- Backend code is Lambda-compatible via Mangum; no Lambda-specific business logic should appear in `app/`.
 
 ---
 
@@ -439,33 +465,76 @@ For work that spans multiple domains, the main Claude agent must:
 
 ## 8. Environment Strategy
 
-Git branches and deployment environments are separate concepts.
-
-### Branches
+### Git Branches (separable from deployment environments)
 
 ```text
-main
-  ↓
-develop
-  ↓
-feature/*
+main (production-ready)
+  ↑
+develop (active integration)
+  ↑
+feature/* (work-in-progress)
 ```
 
-Recommended flow:
+**Rules:**
+- Feature work targets `develop` and must pass all CI gates.
+- Release promotion targets `main`.
+- Direct pushes to `main` are not allowed.
+- Do **not** create long-lived Git branches for environments; use Terraform and deployment pipelines instead.
 
-```text
-feature/* → Pull Request → develop → staging → main → production
+### Deployment Environments and Validation Flow
+
+**Phase 1 — Local Development**
+```
+Local workstation
+  ↓
+VS Code / Claude Code / GitHub Copilot
+  ↓
+Local tests/linting/security checks
+  ↓
+Feature branch
 ```
 
-### Environments
+**Phase 1 → Vercel Validation**
+```
+Feature branch
+  ↓
+Pull Request to develop
+  ↓
+CI quality gates (tests, lint, format, type-check, security)
+  ↓
+Merge to develop
+  ↓
+Vercel validation deployment (auto-deploys from develop)
+  ↓
+Public test URL (demo/validation phase)
+  ↓
+Smoke + E2E tests
+```
 
-- `dev`
-- `staging`
-- `prod`
+**Phase 2 → AWS Deployment**
+```
+develop (validated in Vercel)
+  ↓
+AWS staging (Terraform-managed)
+  ↓
+Staging smoke + E2E tests
+  ↓
+Manual approval
+  ↓
+Promote to main
+  ↓
+AWS production (Terraform-managed)
+  ↓
+Production smoke + E2E tests
+```
 
-One staging environment is enough for MVP.
+**Environment summary:**
+- `local` — individual developer machine
+- `vercel` — Phase 1 public validation
+- `aws-staging` — Phase 2 staging (managed by Terraform)
+- `aws-prod` — Phase 2 production (managed by Terraform)
 
-Do **not** create a new long-lived Git branch for every staging environment.
+One staging environment is sufficient for MVP. Both staging and production are provisioned through Terraform from the same code, differing only in variable values (environment-specific config).
 
 ---
 
@@ -487,6 +556,7 @@ The author/agent must:
 8. Run Terraform validation for infrastructure changes.
 9. Confirm no secrets or sensitive files are included.
 10. Update documentation when behavior or architecture changes.
+11. Verify all CI gates pass (do not bypass checks with `|| true`, `continue-on-error`, or `--no-verify`).
 
 ### PR destination rules
 
@@ -496,18 +566,31 @@ The author/agent must:
 - Production deployments happen from the approved `main` pipeline.
 - Do not open PRs against the wrong branch.
 - When a task specifies a target branch, verify the target branch before creating the PR.
+- **Agents may create and commit to PRs, but must NOT merge their own PR.** Human review is required.
 
-### PR must include
+### Every PR must include
 
-- What changed.
-- Why it changed.
-- Tests added/updated.
-- Test command(s) run.
-- Lint/format checks run.
-- Security checks run when applicable.
-- Infrastructure impact when applicable.
+- What changed (summary of files/logic modified).
+- Why it changed (business reason or requirement).
+- Tests added/updated and test command(s) run with results (PASS/FAIL).
+- Lint, format, and type check results.
+- Security checks run when applicable and results.
+- Infrastructure impact when applicable (cost, resources, permissions).
 - Screenshots for meaningful UI changes.
-- Any follow-up work that is intentionally not included.
+- Any intentionally deferred follow-up work.
+
+### CI quality gates are not optional
+
+Every PR must pass:
+- All linting checks (no warnings bypassed)
+- All formatting checks
+- All type checks
+- All unit + integration tests (minimum 80% coverage)
+- All applicable security checks (bandit, pip-audit, npm audit)
+- All Terraform validation (for infrastructure PRs)
+- Codecov coverage gate
+
+CI failures must be fixed, not bypassed. A PR cannot merge if CI fails.
 
 ---
 
@@ -858,9 +941,11 @@ Reliable SkillGraph experience
 
 ## 17. Cost-Control Rules
 
-The project must be **as cost-effective and low-cost as reasonably possible** while still meeting product quality and competition requirements. Cost optimization is an engineering requirement, not an afterthought.
+The project must be **as cost-effective and low-cost as reasonably possible** while still meeting product quality and competition requirements. Cost optimization is a mandatory engineering requirement, not an afterthought.
 
 Every agent must prefer the simplest architecture that satisfies the requirement and must not add infrastructure only for complexity or demonstration value.
+
+### Cost-aware decision framework
 
 Before proposing a new AWS service, the agent must consider:
 1. Is the service required for the product?
@@ -869,27 +954,61 @@ Before proposing a new AWS service, the agent must consider:
 4. Does the service introduce an always-on or fixed cost?
 5. Can the feature be deferred without blocking the MVP?
 
-Avoid unless justified:
-- EKS.
-- EC2.
-- RDS.
-- NAT Gateway.
-- ALB.
-- Managed Prometheus.
-- Managed Grafana.
-- Always-on compute.
+### Services to avoid (unless documented requirement)
 
-Prefer:
-- Lambda.
-- DynamoDB On-Demand.
-- S3.
-- CloudFront.
-- API Gateway HTTP API.
-- Bedrock with controlled model/token usage.
+- EKS
+- EC2 (except container builds)
+- RDS (use DynamoDB On-Demand)
+- NAT Gateway (use VPC endpoints or NAT instances as temporary debugging tools only)
+- ALB (use API Gateway HTTP API)
+- Managed Prometheus (use CloudWatch)
+- Managed Grafana (use CloudWatch)
+- Always-on compute (favor Lambda)
 
-Create AWS budgets and billing alerts before substantial cloud testing.
+### Preferred services
 
-Any PR that adds an AWS service, persistent compute, significant storage, or higher AI usage must include a brief cost consideration.
+- Lambda (serverless, pay-per-invocation)
+- DynamoDB On-Demand (no provisioned capacity)
+- S3 (for static files and artifacts)
+- CloudFront (CDN for S3)
+- API Gateway HTTP API (cheaper than REST API)
+- Cognito (for authentication)
+- Bedrock with controlled model/token usage (metered)
+- CloudWatch (monitoring, logs, alarms)
+
+### AWS Billing and Budget Controls
+
+Before Phase 2 AWS deployment:
+
+1. **Create an AWS Budget** with the following alerts:
+   - Alert at **$10 spend** (estimated monthly for MVP development)
+   - Alert at **$20 spend** (halfway to planning target)
+   - Alert at **$25 spend** (planning target for full MVP; may be slightly exceeded but should not be routine)
+
+2. **Enable CloudWatch billing alarms** (via SNS):
+   - Email notification when any alert triggers
+   - Review billings alerts weekly during development
+
+3. **Monthly cost review target:**
+   - Approximately **$25 USD/month or less** for the full application (development + validation)
+   - Includes: Lambda invocations, DynamoDB storage/throughput, S3, CloudFront, Cognito, Bedrock usage, CloudWatch logs
+   - Treat this as a planning target, not a hard limit; some overages are acceptable during testing
+
+4. **Cost control practices:**
+   - Use DynamoDB On-Demand pricing (no reserved capacity)
+   - Delete unused test resources immediately
+   - Control Bedrock model usage (log token counts, set per-request limits if available)
+   - Archive CloudWatch logs to S3 after 7–14 days to control log retention costs
+   - Use CloudFront aggressively to cache static assets
+   - Monitor API Gateway request counts
+   - Set CloudWatch log retention policies (e.g., 7 days for dev, 30 days for prod)
+
+5. **Cost visibility:**
+   - Any PR that adds an AWS service, persistent storage, or significant Bedrock usage must include a brief cost impact note
+   - Document any cost-increasing changes in the commit message
+   - If any service reaches $10+/month in isolation, reevaluate whether a cheaper alternative exists
+
+Any agent proposing a service must include a cost estimate in the PR description. The review must assess cost reasonableness before merging.
 
 ## 18. Documentation Requirements
 

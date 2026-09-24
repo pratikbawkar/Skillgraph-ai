@@ -1,0 +1,30 @@
+coverage:
+  precision: 2
+  round: down
+  range: "70...100"
+
+ignore:
+  - "tests"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/mocks"
+
+codecov:
+  require_ci_to_pass: yes
+
+comment:
+  layout: "reach, diff, flags, tree"
+  behavior: default
+  require_changes: false
+
+flags:
+  backend:
+    paths:
+      - backend/app
+    carryforward: true
+  frontend:
+    paths:
+      - frontend/app
+      - frontend/components
+      - frontend/lib
+    carryforward: true
