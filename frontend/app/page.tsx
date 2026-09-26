@@ -31,37 +31,54 @@ export default async function HomePage() {
             }}
           />
           <div className="absolute inset-0 rounded-full border border-dashed border-indigo-300 dark:border-indigo-800" />
-          <div className="absolute inset-[12%] rounded-full border border-dashed border-indigo-300/80 dark:border-indigo-800/80" />
-          <div className="absolute inset-[24%] rounded-full border border-dashed border-indigo-300/60 dark:border-indigo-800/60" />
+          <div className="absolute inset-[9%] rounded-full border border-dashed border-indigo-300/85 dark:border-indigo-800/85" />
+          <div className="absolute inset-[18%] rounded-full border border-dashed border-indigo-300/70 dark:border-indigo-800/70" />
+          <div className="absolute inset-[27%] rounded-full border border-dashed border-indigo-300/55 dark:border-indigo-800/55" />
           <div className="absolute inset-[36%] rounded-full border border-dashed border-indigo-300/40 dark:border-indigo-800/40" />
-          <div className="orbit-ring absolute inset-0" style={{ animationDuration: '36s' }}>
+          <div className="absolute inset-[45%] rounded-full border border-dashed border-indigo-300/25 dark:border-indigo-800/25" />
+          <div className="orbit-ring absolute inset-0" style={{ animationDuration: '18s' }}>
             <span
-              className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 rounded-full shadow"
+              className="absolute left-1/2 top-0 h-5 w-5 -translate-x-1/2 rounded-full shadow"
               style={{ background: 'radial-gradient(circle at 35% 35%, #93c5fd, #0284c7 70%)' }}
             />
           </div>
           <div
-            className="orbit-ring absolute inset-[12%]"
-            style={{ animationDuration: '27s', animationDirection: 'reverse' }}
+            className="orbit-ring absolute inset-[9%]"
+            style={{ animationDuration: '14s', animationDirection: 'reverse' }}
           >
             <span
-              className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full shadow"
+              className="absolute left-1/2 top-0 h-4.5 w-4.5 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #d8b4fe, #7e22ce 70%)' }}
+            />
+          </div>
+          <div className="orbit-ring absolute inset-[18%]" style={{ animationDuration: '11s' }}>
+            <span
+              className="absolute left-1/2 top-0 h-4 w-4 -translate-x-1/2 rounded-full shadow"
               style={{ background: 'radial-gradient(circle at 35% 35%, #fde68a, #d97706 70%)' }}
             />
           </div>
-          <div className="orbit-ring absolute inset-[24%]" style={{ animationDuration: '19s' }}>
+          <div
+            className="orbit-ring absolute inset-[27%]"
+            style={{ animationDuration: '9s', animationDirection: 'reverse' }}
+          >
             <span
-              className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full shadow"
+              className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 rounded-full shadow"
               style={{ background: 'radial-gradient(circle at 35% 35%, #6ee7b7, #059669 70%)' }}
             />
           </div>
+          <div className="orbit-ring absolute inset-[36%]" style={{ animationDuration: '7s' }}>
+            <span
+              className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #fca5a5, #dc2626 70%)' }}
+            />
+          </div>
           <div
-            className="orbit-ring absolute inset-[36%]"
-            style={{ animationDuration: '12s', animationDirection: 'reverse' }}
+            className="orbit-ring absolute inset-[45%]"
+            style={{ animationDuration: '5s', animationDirection: 'reverse' }}
           >
             <span
-              className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full shadow"
-              style={{ background: 'radial-gradient(circle at 35% 35%, #fca5a5, #dc2626 70%)' }}
+              className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #f9a8d4, #db2777 70%)' }}
             />
           </div>
           {[
@@ -90,6 +107,25 @@ export default async function HomePage() {
             and follow a roadmap of real projects with measurable evidence of
             progress.
           </p>
+        </div>
+
+        <div className="pointer-events-none absolute -right-8 -top-8 hidden h-56 w-56 sm:block">
+          <div className="absolute inset-0 rounded-full border border-dashed border-white/30" />
+          <div className="absolute inset-8 rounded-full border border-dashed border-white/25" />
+          <div className="absolute inset-16 rounded-full border border-dashed border-white/20" />
+          <div className="orbit-ring absolute inset-0" style={{ animationDuration: '9s' }}>
+            <span className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full bg-role-cloud shadow" />
+          </div>
+          <div
+            className="orbit-ring absolute inset-8"
+            style={{ animationDuration: '13s', animationDirection: 'reverse' }}
+          >
+            <span className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full bg-role-devops shadow" />
+          </div>
+          <div className="orbit-ring absolute inset-16" style={{ animationDuration: '7s' }}>
+            <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-role-python shadow" />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center text-4xl">🪐</div>
         </div>
       </section>
 
