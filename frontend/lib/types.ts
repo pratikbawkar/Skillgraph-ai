@@ -101,28 +101,16 @@ export interface Roadmap {
   steps: RoadmapStep[];
 }
 
-export interface EvidenceSubmission {
+export interface QuizQuestion {
   id: string;
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+}
+
+export interface SkillQuiz {
   skillId: string;
-  description: string;
-  links: string[];
-  submittedAt: string;
-}
-
-export type EvidenceConfidence = 'low' | 'medium' | 'high';
-
-export interface EvidenceFinding {
-  summary: string;
-  relevantSkillIds: string[];
-  matchedCriteria: string[];
-  missingCriteria: string[];
-  confidence: EvidenceConfidence;
-}
-
-export interface EvidenceEvaluation {
-  submissionId: string;
-  findings: EvidenceFinding;
-  evaluatedAt: string;
+  questions: QuizQuestion[];
 }
 
 export interface UserProfile {

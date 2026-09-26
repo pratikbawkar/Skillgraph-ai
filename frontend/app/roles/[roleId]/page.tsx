@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { fetchRole, fetchRoleProgress, fetchRoles } from '@/lib/api-client';
-import { SkillCard } from '@/components/SkillCard';
-import { ProgressBar } from '@/components/ProgressBar';
+import { RoleSkillsBoard } from '@/components/RoleSkillsBoard';
+import { SuggestedProjectCard } from '@/components/SuggestedProjectCard';
 
 export async function generateStaticParams() {
   const roles = await fetchRoles();
@@ -28,21 +28,9 @@ export default async function RolePage({ params }: RolePageProps) {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{role.name}</h1>
         <p className="mt-1 text-gray-600 dark:text-gray-400">{role.description}</p>
-        <div className="mt-4 max-w-sm">
-          <ProgressBar
-            percentage={progress.overallPercentage}
-            label="Overall role progress"
-          />
-        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {role.skills.map((skill) => {
-          const skillProgress = progressBySkillId.get(skill.id);
-          if (!skillProgress) return null;
-          return <SkillCard key={skill.id} skill={skill} progress={skillProgress} />;
-        })}
-      </div>
+      <RoleSkillsBoard role={role} progressBySkillId={progressBySkillId} />
 
       {role.suggestedProjects.length > 0 && (
         <div className="mt-8">
@@ -51,13 +39,7 @@ export default async function RolePage({ params }: RolePageProps) {
           </h2>
           <ul className="space-y-2">
             {role.suggestedProjects.map((project) => (
-              <li
-                key={project.id}
-                className="rounded-lg border border-indigo-100 bg-white p-3 dark:border-gray-800 dark:bg-gray-900"
-              >
-                <p className="font-medium text-gray-900 dark:text-gray-100">{project.title}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{project.description}</p>
-              </li>
+              <SuggestedProjectCard key={project.id} project={project} />
             ))}
           </ul>
         </div>
