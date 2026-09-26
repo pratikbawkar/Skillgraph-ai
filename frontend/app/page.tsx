@@ -17,7 +17,69 @@ export default async function HomePage() {
   const roles = await fetchRoles();
 
   return (
-    <div>
+    <div className="relative">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center overflow-hidden opacity-40 dark:opacity-25"
+      >
+        <div className="relative h-[95vmin] w-[95vmin] shrink-0">
+          <div
+            className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              background: 'radial-gradient(circle at 35% 35%, #fef08a, #f59e0b 60%, #b45309)',
+              boxShadow: '0 0 40px 12px rgba(245, 158, 11, 0.55)',
+            }}
+          />
+          <div className="absolute inset-0 rounded-full border border-dashed border-indigo-300 dark:border-indigo-800" />
+          <div className="absolute inset-[12%] rounded-full border border-dashed border-indigo-300/80 dark:border-indigo-800/80" />
+          <div className="absolute inset-[24%] rounded-full border border-dashed border-indigo-300/60 dark:border-indigo-800/60" />
+          <div className="absolute inset-[36%] rounded-full border border-dashed border-indigo-300/40 dark:border-indigo-800/40" />
+          <div className="orbit-ring absolute inset-0" style={{ animationDuration: '36s' }}>
+            <span
+              className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #93c5fd, #0284c7 70%)' }}
+            />
+          </div>
+          <div
+            className="orbit-ring absolute inset-[12%]"
+            style={{ animationDuration: '27s', animationDirection: 'reverse' }}
+          >
+            <span
+              className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #fde68a, #d97706 70%)' }}
+            />
+          </div>
+          <div className="orbit-ring absolute inset-[24%]" style={{ animationDuration: '19s' }}>
+            <span
+              className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #6ee7b7, #059669 70%)' }}
+            />
+          </div>
+          <div
+            className="orbit-ring absolute inset-[36%]"
+            style={{ animationDuration: '12s', animationDirection: 'reverse' }}
+          >
+            <span
+              className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full shadow"
+              style={{ background: 'radial-gradient(circle at 35% 35%, #fca5a5, #dc2626 70%)' }}
+            />
+          </div>
+          {[
+            { top: '10%', left: '15%', delay: '0s' },
+            { top: '25%', left: '80%', delay: '0.6s' },
+            { top: '65%', left: '8%', delay: '1.2s' },
+            { top: '80%', left: '70%', delay: '0.3s' },
+            { top: '45%', left: '92%', delay: '1.8s' },
+          ].map((star, index) => (
+            <span
+              key={index}
+              className="orbit-star absolute h-1 w-1 rounded-full bg-indigo-400 dark:bg-indigo-300"
+              style={{ top: star.top, left: star.left, animationDelay: star.delay }}
+            />
+          ))}
+        </div>
+      </div>
+
       <section className="relative mb-10 overflow-hidden rounded-2xl bg-gradient-to-r from-brand via-indigo-500 to-role-python p-8 text-white shadow-lg sm:p-10">
         <div className="relative z-10 max-w-2xl">
           <h1 className="text-3xl font-bold">
@@ -28,25 +90,6 @@ export default async function HomePage() {
             and follow a roadmap of real projects with measurable evidence of
             progress.
           </p>
-        </div>
-
-        <div className="pointer-events-none absolute -right-8 -top-8 hidden h-56 w-56 sm:block">
-          <div className="absolute inset-0 rounded-full border border-dashed border-white/30" />
-          <div className="absolute inset-8 rounded-full border border-dashed border-white/25" />
-          <div className="absolute inset-16 rounded-full border border-dashed border-white/20" />
-          <div className="orbit-ring absolute inset-0" style={{ animationDuration: '9s' }}>
-            <span className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full bg-role-cloud shadow" />
-          </div>
-          <div
-            className="orbit-ring absolute inset-8"
-            style={{ animationDuration: '13s', animationDirection: 'reverse' }}
-          >
-            <span className="absolute left-1/2 top-0 h-3 w-3 -translate-x-1/2 rounded-full bg-role-devops shadow" />
-          </div>
-          <div className="orbit-ring absolute inset-16" style={{ animationDuration: '7s' }}>
-            <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-role-python shadow" />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center text-4xl">🪐</div>
         </div>
       </section>
 
