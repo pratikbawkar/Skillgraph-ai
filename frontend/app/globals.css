@@ -6,3 +6,53 @@ html,
 body {
   height: 100%;
 }
+
+@keyframes celebration-burst {
+  0% {
+    transform: translate(0, 0) scale(0.5) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+.celebration-piece {
+  animation: celebration-burst 1.8s ease-out forwards;
+}
+
+@keyframes orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.orbit-ring {
+  animation: orbit-spin 10s linear infinite;
+}
+
+@keyframes orbit-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.orbit-star {
+  animation: orbit-twinkle 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration-piece,
+  .orbit-ring,
+  .orbit-star {
+    animation: none;
+  }
+}

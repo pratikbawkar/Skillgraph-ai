@@ -1,12 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useTheme } from '@/lib/theme-context';
+import { isAdminLoggedIn, logoutAdmin } from '@/lib/admin-store';
 
 export function Navbar() {
   const { user, logout, isLoading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(isAdminLoggedIn());
+  }, []);
 
   return (
     <header className="border-b border-indigo-100 bg-white/80 backdrop-blur dark:border-gray-800 dark:bg-gray-950/80">
@@ -15,7 +22,7 @@ export function Navbar() {
           href="/"
           className="text-lg font-bold text-brand dark:text-brand-light"
         >
-          SkillGraph
+          Skill Orbit
         </Link>
         <div className="flex items-center gap-4 text-sm">
           <Link
@@ -24,13 +31,6 @@ export function Navbar() {
           >
             Roles
           </Link>
-          <Link
-            href="/evidence"
-            className="text-gray-600 hover:text-brand dark:text-gray-300 dark:hover:text-brand-light"
-          >
-            Submit Evidence
-          </Link>
-
           <button
             type="button"
             onClick={toggleTheme}
@@ -39,6 +39,26 @@ export function Navbar() {
           >
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
+
+          {isAdmin ? (
+            <button
+              type="button"
+              onClick={() => {
+                logoutAdmin();
+                setIsAdmin(false);
+              }}
+              className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Admin logout
+            </button>
+          ) : (
+            <Link
+              href="/admin/login"
+              className="text-xs text-gray-500 hover:text-brand dark:text-gray-400 dark:hover:text-brand-light"
+            >
+              Admin
+            </Link>
+          )}
 
           {!isLoading && user ? (
             <>

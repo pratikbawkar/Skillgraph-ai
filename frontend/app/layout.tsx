@@ -5,7 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SkillGraph',
+  title: 'Skill Orbit',
   description: 'Turn skill gaps into a practical, project-based learning roadmap.',
 };
 

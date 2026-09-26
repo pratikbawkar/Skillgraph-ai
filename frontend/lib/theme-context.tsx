@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 
 type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'skillgraph.theme';
+const STORAGE_KEY = 'skillorbit.theme';
 
 interface ThemeContextValue {
   theme: Theme;

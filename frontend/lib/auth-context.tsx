@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { UserProfile } from './types';
 
-const STORAGE_KEY = 'skillgraph.auth';
+const STORAGE_KEY = 'skillorbit.auth';
 
 interface StoredAuth {
   token: string;

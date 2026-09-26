@@ -30,7 +30,7 @@ describe('ThemeProvider / useTheme', () => {
     await user.click(screen.getByRole('button'));
 
     expect(await screen.findByText('current-theme:dark')).toBeInTheDocument();
-    expect(window.localStorage.getItem('skillgraph.theme')).toBe('dark');
+    expect(window.localStorage.getItem('skillorbit.theme')).toBe('dark');
   });
 
   it('throws when useTheme is used outside a ThemeProvider', () => {
