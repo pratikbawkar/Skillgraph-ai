@@ -1,6 +1,8 @@
-# SkillGraph AI
+# Skill Orbit
 
-Helps students and early-career learners identify skill gaps for a target role and turn those gaps into a practical, project-based learning roadmap with measurable evidence of progress.
+Skill Orbit helps students and early-career learners identify skill gaps for a target role and turn those gaps into a practical, project-based learning roadmap with measurable evidence of progress.
+
+The frontend already uses **Skill Orbit** as its product name. Some backend and planning documents still use the earlier name **SkillGraph AI**; those references describe this same project.
 
 See [`plan.md`](plan.md) for the full project operating contract (goals, architecture, phases, CI/CD, and rules every change must follow).
 
