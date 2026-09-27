@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Skill-Orbit: Current Runtime and AWS Target",
+    "output": "skill-orbit-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/pratikbawkar/Skillgraph-ai",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "30dd6458a9eb14a1cfe8f1c289f20a17c697095c"
+    },
+    "views": [
+      { "id": "phase-one-runtime", "label": "Phase 1 runtime", "focus": ["learner", "web", "mock-data", "fastapi", "memory"] },
+      { "id": "client-state", "label": "Browser state", "focus": ["web", "local-state"] },
+      { "id": "aws-target", "label": "Phase 2 AWS target", "focus": ["web", "aws-web", "fastapi", "aws-api", "aws-services"] }
+    ]
+  },
+  "components": [
+    { "id": "learner", "type": "external", "label": "Learner", "sublabel": "Browser", "pos": [35, 290], "size": [130, 68] },
+    { "id": "web", "type": "frontend", "label": "Next.js static app", "sublabel": "Vercel validation · App Router", "pos": [255, 290], "size": [180, 76], "sources": [{ "path": "frontend/next.config.js", "line": 2, "label": "static export" }, { "path": "frontend/app/layout.tsx", "label": "app shell" }] },
+    { "id": "mock-data", "type": "frontend", "label": "Local mock fixtures", "sublabel": "roles + base progress", "pos": [255, 115], "size": [180, 72], "sources": [{ "path": "frontend/lib/api-client.ts", "line": 13, "label": "mock switch" }, { "path": "frontend/lib/mock-data.ts", "label": "seed data" }] },
+    { "id": "local-state", "type": "database", "label": "Browser localStorage", "sublabel": "auth + activity state", "pos": [255, 475], "size": [180, 72], "sources": [{ "path": "frontend/lib/auth-context.tsx", "label": "auth session" }, { "path": "frontend/lib/progress-store.ts", "label": "local progress" }] },
+    { "id": "fastapi", "type": "backend", "label": "FastAPI backend", "sublabel": "auth · profile · roles · progress", "pos": [535, 290], "size": [200, 76], "sources": [{ "path": "backend/app/main.py", "line": 37, "label": "app + routers" }, { "path": "backend/app/api/roles.py", "label": "roles + progress" }] },
+    { "id": "memory", "type": "database", "label": "In-memory repositories", "sublabel": "seeded roles · users · progress", "pos": [835, 290], "size": [190, 76], "sources": [{ "path": "backend/app/repositories/role_repository.py", "label": "role graph" }, { "path": "backend/app/repositories/progress_repository.py", "label": "progress state" }, { "path": "backend/app/repositories/user_repository.py", "label": "user records" }] },
+    { "id": "aws-web", "type": "cloud", "label": "CloudFront + S3", "sublabel": "planned static hosting", "tag": "Phase 2 target", "pos": [1125, 105], "size": [190, 76] },
+    { "id": "aws-api", "type": "cloud", "label": "API Gateway + Lambda", "sublabel": "HTTP API · Mangum · FastAPI", "tag": "Phase 2 target", "pos": [1125, 290], "size": [210, 76], "sources": [{ "path": "backend/handler.py", "line": 8, "label": "Lambda adapter" }, { "path": "plan.md", "line": 271, "label": "planned runtime" }] },
+    { "id": "aws-services", "type": "cloud", "label": "AWS application services", "sublabel": "DynamoDB · Cognito · Bedrock · CloudWatch", "tag": "Planned · not deployed", "pos": [1125, 475], "size": [230, 76], "sources": [{ "path": "plan.md", "line": 290, "label": "target architecture" }] }
+  ],
+  "connections": [
+    { "id": "learner-web", "from": "learner", "to": "web", "label": "uses app", "variant": "emphasis" },
+    { "id": "web-mocks", "from": "web", "to": "mock-data", "label": "default", "fromSide": "top", "toSide": "bottom" },
+    { "id": "web-state", "from": "web", "to": "local-state", "label": "reads / writes", "fromSide": "bottom", "toSide": "top" },
+    { "id": "web-api", "from": "web", "to": "fastapi", "label": "HTTP JSON when mocks are off", "variant": "emphasis" },
+    { "id": "api-memory", "from": "fastapi", "to": "memory", "label": "read + update" },
+    { "id": "web-aws", "from": "web", "to": "aws-web", "label": "planned migration", "variant": "dashed" },
+    { "id": "api-aws", "from": "fastapi", "to": "aws-api", "label": "same FastAPI app via adapter", "variant": "dashed" },
+    { "id": "aws-data", "from": "aws-api", "to": "aws-services", "label": "Phase 2 integrations", "variant": "dashed", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Current Phase 1 runtime", "items": ["Next.js is configured for static export and Vercel validation", "Mock data is the default; setting NEXT_PUBLIC_USE_MOCKS=false switches role, progress, login, and registration calls to FastAPI", "The UI stores auth and learning activity in browser localStorage"] },
+    { "dot": "emerald", "title": "Backend state and scoring", "items": ["FastAPI routes call service and repository layers", "Role catalog, user records, and progress live in process memory and reset on restart", "The UI layers local quiz, video, project, and completion signals over the fetched base progress"] },
+    { "dot": "rose", "title": "Phase 2 target only", "items": ["The plan calls for CloudFront + S3, API Gateway HTTP API, Lambda + Mangum, DynamoDB, Cognito, Bedrock, and CloudWatch", "Terraform has no files yet; the AWS target is not deployed", "Phase 1 validation exit criteria must be met before production AWS infrastructure"] }
+  ]
+}
