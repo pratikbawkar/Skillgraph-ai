@@ -237,7 +237,9 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
   auto_deploy = true
-  default_route_settings { detailed_metrics_enabled = false }
+  default_route_settings {
+    detailed_metrics_enabled = false
+  }
   tags = local.tags
 }
 

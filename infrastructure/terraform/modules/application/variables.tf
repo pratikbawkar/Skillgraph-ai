@@ -2,8 +2,8 @@ variable "project_name" { type = string }
 variable "environment" {
   type = string
   validation {
-    condition     = contains(["staging", "prod"], var.environment)
-    error_message = "environment must be staging or prod."
+    condition     = var.environment == "prod"
+    error_message = "environment must be prod."
   }
 }
 variable "aws_region" { type = string }
