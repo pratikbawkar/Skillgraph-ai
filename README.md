@@ -53,8 +53,7 @@ Pull latest `develop` (or `main`) before starting local testing — a branch beh
 
 ## Deployment
 
-- **Phase 1 (current):** Vercel validation deployment from `develop`. See [`VERCEL_DEPLOYMENT.md`](VERCEL_DEPLOYMENT.md).
-- **Phase 2+:** AWS production (Terraform-managed serverless architecture). See `plan.md` section 5.
+- **AWS production:** CI checks pull requests targeting `main` and changes pushed to `develop`. A push to `main` reruns CI and deploys Terraform infrastructure and the static frontend to AWS production. See [`infrastructure/terraform/README.md`](infrastructure/terraform/README.md) for the AWS and GitHub OIDC setup.
 
 ## Testing
 

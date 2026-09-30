@@ -1,5 +1,7 @@
 # Vercel Deployment Guide - Phase 2
 
+> **Archived:** This is a legacy Vercel validation guide. Production CI/CD now targets AWS from `main`. Follow [`infrastructure/terraform/README.md`](infrastructure/terraform/README.md) for the active deployment workflow.
+
 **Purpose:** Deploy SkillGraph frontend to Vercel for validation before AWS Phase 3 (Terraform/Lambda)
 
 ---

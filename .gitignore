@@ -5,6 +5,16 @@
 .env.*
 !.env.example
 
+# Local credentials and secrets
+.aws/
+.ssh/
+credentials
+credentials.*
+*.credentials
+*.secret
+*.secrets
+id_rsa
+id_ed25519
 *.pem
 *.key
 
@@ -12,8 +22,11 @@
 **/.terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
+tfplan
 *.tfvars
 !*.tfvars.example
+terraform.tfstate.d/
 
 node_modules/
 
@@ -34,3 +47,13 @@ playwright-report/
 
 # Deployment artifacts are created locally or in CI.
 build/
+# Terraform / local tooling
+*.tfvars.json
+.terraformrc
+terraform.rc
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

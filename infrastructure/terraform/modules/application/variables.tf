@@ -17,9 +17,9 @@ variable "lambda_timeout_seconds" {
   default = 30
 }
 variable "log_retention_days" { type = number }
-variable "budget_alert_email" {
-  type    = string
-  default = null
+variable "budget_alert_emails" {
+  type    = list(string)
+  default = []
 }
 variable "monthly_budget_limit_usd" {
   type    = number

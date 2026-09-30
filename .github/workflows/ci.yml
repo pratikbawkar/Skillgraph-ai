@@ -2,9 +2,10 @@ name: CI
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [main, develop]
   push:
     branches: [develop]
+  workflow_call:
 
 jobs:
   backend-test:
@@ -113,3 +114,23 @@ jobs:
           name: frontend
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
+
+  terraform-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infrastructure/terraform
+
+      - name: Initialize production Terraform configuration
+        run: terraform -chdir=infrastructure/terraform/environments/prod init -backend=false
+
+      - name: Validate production Terraform configuration
+        run: terraform -chdir=infrastructure/terraform/environments/prod validate
