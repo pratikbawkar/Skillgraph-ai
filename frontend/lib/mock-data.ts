@@ -39,7 +39,7 @@ export const ROLES: Role[] = [
         learningResource: {
           skillId: 'ce-iam',
           videoTitle: 'DRAFT: IAM Deep Dive',
-          youtubeUrl: 'https://www.youtube.com/watch?v=DRAFT_PLACEHOLDER_2',
+          youtubeUrl: 'https://youtu.be/mCLYcsJ0GXQ?si=UZFs6gOUxdkLq44-',
           curatedBy: 'draft-pending-review',
         },
       },
