@@ -2,8 +2,8 @@ variable "project_name" { type = string }
 variable "environment" {
   type = string
   validation {
-    condition     = contains(["staging", "prod"], var.environment)
-    error_message = "environment must be staging or prod."
+    condition     = var.environment == "prod"
+    error_message = "environment must be prod."
   }
 }
 variable "aws_region" { type = string }
@@ -17,9 +17,9 @@ variable "lambda_timeout_seconds" {
   default = 30
 }
 variable "log_retention_days" { type = number }
-variable "budget_alert_email" {
-  type    = string
-  default = null
+variable "budget_alert_emails" {
+  type    = list(string)
+  default = []
 }
 variable "monthly_budget_limit_usd" {
   type    = number

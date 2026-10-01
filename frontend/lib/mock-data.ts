@@ -23,7 +23,7 @@ export const ROLES: Role[] = [
         learningResource: {
           skillId: 'ce-networking-fundamentals',
           videoTitle: 'DRAFT: AWS Networking Fundamentals',
-          youtubeUrl: 'https://www.youtube.com/watch?v=DRAFT_PLACEHOLDER_1',
+          youtubeUrl: 'https://www.youtube.com/playlist?list=PLOspHqNVtKAA_5N3pI49wkH4WsTkeZ_iQ',
           note: 'Placeholder — replace with owner-approved resource.',
           curatedBy: 'draft-pending-review',
         },

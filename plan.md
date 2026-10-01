@@ -20,9 +20,9 @@ This section records what is present in the repository; it does not claim that c
 
 * The frontend is a Next.js, TypeScript, Tailwind application configured for static export. Mock data is the default; its API client can be configured to call the FastAPI API.
 * The backend is a FastAPI application with mock HMAC authentication, in-memory user/progress repositories, seeded role data, deterministic progress scoring, and practical-task completion tracking. It does not yet use Cognito, DynamoDB, or Bedrock.
-* A Mangum Lambda entry point and Terraform configuration for staging and production exist. The Terraform configuration describes a private S3/CloudFront frontend, API Gateway HTTP API, Lambda, DynamoDB tables, Cognito user pool/client, CloudWatch log group/alarms, SNS notifications, and optional AWS Budgets. S3 is used for the static frontend and is not used for user evidence/file storage in the MVP. Their existence in code is not evidence that they have been applied in AWS.
+* A Mangum Lambda entry point and a production-only Terraform configuration exist. Automated deployment targets production and uses a private S3/CloudFront frontend, API Gateway HTTP API, Lambda, DynamoDB tables, Cognito user pool/client, CloudWatch log group/alarms, SNS notifications, and an AWS Budget. S3 is used for the static frontend and is not used for user evidence/file storage in the MVP. Their existence in code is not evidence that they have been applied in AWS.
 * The Lambda package script targets Python 3.11 on Linux ARM64. The Terraform Lambda environment currently sets `USE_BEDROCK_MOCK=true`.
-* GitHub Actions currently runs CI for pull requests and pushes to `develop`. The CD workflow runs on pushes to `main` and attempts a Vercel deployment. It does not currently deploy the Terraform/AWS stack, and its smoke-test job does not make application health/API requests.
+* GitHub Actions runs CI on pull requests to `main` and `develop`, and pushes to `develop`. A push to `main` calls the CI workflow before deploying the production Terraform stack and frontend to AWS through GitHub OIDC. AWS deployment remains unverified until the first successful apply and live checks.
 * The repository currently has frontend component tests and backend unit/integration tests. Playwright E2E tests, k6 performance scripts, and architecture/ADR documentation are planned but are not present in the tracked source tree.
 * The current application is still at the Phase 1 application-readiness stage. AWS infrastructure definitions have been added ahead of completion of the production application integration; that does not satisfy Phase 2 exit criteria. Treat all AWS resources as proposed/configured in Terraform until a deployment is independently verified.
 
@@ -236,20 +236,20 @@ Public test application
 
 ### Phase 2 — AWS Deployment + Public Production
 
-**Status:** Terraform foundation exists for `staging` and `prod`; application integration and verified deployment remain incomplete.
+**Status:** A production-only Terraform foundation exists; application integration and verified deployment remain incomplete.
 
 Goal: deploy the validated application to the planned low-cost AWS serverless architecture and expose it publicly.
 
 ```text
 Phase 1 validated application
         ↓
-Review Terraform plan for staging
+CI checks
         ↓
-Deploy and integrate AWS services
+CD applies production Terraform and deploys the app
         ↓
-Staging smoke + E2E verification
+Production deployment verification
         ↓
-Human approval / production plan review
+Production verification
         ↓
 Terraform-managed production deployment
         ↓
@@ -260,7 +260,7 @@ Production smoke + critical E2E verification
 
 * Reuse validated application behavior from Phase 1.
 * Provision permanent AWS infrastructure through Terraform.
-* Review every plan before applying, especially production.
+* Run CI before the production Terraform apply.
 * Keep the AWS architecture serverless and cost-conscious.
 * Do not add EC2, EKS, RDS, NAT Gateway, ALB, Managed Prometheus, or Managed Grafana unless a documented requirement appears.
 * Integrate and verify Cognito authentication and durable DynamoDB repositories before describing those services as application capabilities.
@@ -271,7 +271,7 @@ Production smoke + critical E2E verification
 
 #### Phase 2 exit criteria
 
-* Terraform plan is reviewed and applied successfully in staging and production.
+* The production Terraform plan is applied successfully through CD.
 * Production AWS deployment succeeds and its public URL is verified.
 * Authentication uses the intended Cognito integration.
 * Core API and database operations use durable AWS-backed repositories.
@@ -409,14 +409,13 @@ The MVP does not require S3-based user evidence or artifact storage.
 * A Lambda execution role with CloudWatch log writes and DynamoDB read/write/query permissions. Bedrock `InvokeModel` is added only when model ARNs are configured.
 * A CloudWatch log group with environment-specific retention:
 
-  * 7 days staging
-  * 30 days prod
+  * 7 days production
 * Lambda/API 5xx alarms.
 * An SNS alert topic.
-* Optional budget-email subscription.
-* An optional monthly AWS Budget. Its current notifications are `$10` actual spend, `$20` actual spend, and `$25` forecasted spend.
+* Budget-email subscriptions to `pratikbawkar33@gmail.com` and `sachin9890@gmail.com` in production.
+* A `$30` monthly AWS Budget with actual-spend alerts at `$10` and `$22`. AWS Budgets alerts but does not enforce a spending cap.
 
-Terraform defines staging and production roots in:
+Terraform defines the production root in:
 
 ```text
 infrastructure/terraform/environments/
@@ -426,7 +425,7 @@ The example variables default to `ap-south-1`.
 
 The email, Bedrock model ARNs, and additional CORS origins are configurable.
 
-Terraform state is local by default according to the infrastructure README. Shared/production use requires a deliberate remote-state and locking setup.
+Production Terraform state uses an encrypted, versioned S3 backend with S3 state locking. The backend bucket must be created before initialization.
 
 ### Current application integration gaps
 
@@ -435,5 +434,5 @@ Terraform state is local by default according to the infrastructure README. Shar
 * The Terraform Lambda role grants DynamoDB access, but that does not create application persistence.
 * `USE_BEDROCK_MOCK` is true in Terraform. Setting it false currently raises `NotImplementedError`; there is no Bedrock client integration yet.
 * The static frontend supports build-time API configuration, but Vercel is set to use mocks.
-* AWS publishing steps are documented in the Terraform README; no GitHub Actions AWS deploy workflow currently performs them.
+* AWS publishing is automated by the GitHub Actions production CD workflow after CI passes on pushes to `main`.
 * Do not claim AWS resources are live or the public AWS application is deployed without checking the AWS account and de

@@ -237,7 +237,11 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.http.id
   name        = "$default"
   auto_deploy = true
-  default_route_settings { detailed_metrics_enabled = true }
+  default_route_settings {
+    detailed_metrics_enabled = false
+    throttling_rate_limit    = 10
+    throttling_burst_limit   = 20
+  }
   tags = local.tags
 }
 
@@ -255,10 +259,10 @@ resource "aws_sns_topic" "alerts" {
 }
 
 resource "aws_sns_topic_subscription" "budget_email" {
-  count     = var.budget_alert_email == null ? 0 : 1
+  for_each  = toset(var.budget_alert_emails)
   topic_arn = aws_sns_topic.alerts.arn
   protocol  = "email"
-  endpoint  = var.budget_alert_email
+  endpoint  = each.value
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
@@ -292,7 +296,7 @@ resource "aws_cloudwatch_metric_alarm" "api_5xx" {
 }
 
 resource "aws_budgets_budget" "monthly" {
-  count        = var.budget_alert_email == null ? 0 : 1
+  count        = length(var.budget_alert_emails) == 0 ? 0 : 1
   name         = "${local.name_prefix}-monthly-cost"
   budget_type  = "COST"
   limit_amount = tostring(var.monthly_budget_limit_usd)
@@ -303,20 +307,13 @@ resource "aws_budgets_budget" "monthly" {
     threshold                  = 10
     threshold_type             = "ABSOLUTE_VALUE"
     notification_type          = "ACTUAL"
-    subscriber_email_addresses = [var.budget_alert_email]
+    subscriber_email_addresses = var.budget_alert_emails
   }
   notification {
     comparison_operator        = "GREATER_THAN"
-    threshold                  = 20
+    threshold                  = 22
     threshold_type             = "ABSOLUTE_VALUE"
     notification_type          = "ACTUAL"
-    subscriber_email_addresses = [var.budget_alert_email]
-  }
-  notification {
-    comparison_operator        = "GREATER_THAN"
-    threshold                  = 25
-    threshold_type             = "FORECASTED"
-    notification_type          = "FORECASTED"
-    subscriber_email_addresses = [var.budget_alert_email]
+    subscriber_email_addresses = var.budget_alert_emails
   }
 }
