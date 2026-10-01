@@ -10,12 +10,17 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (loginAdmin(username.trim(), password)) {
-      router.push('/');
-    } else {
-      setError('Incorrect admin username or password.');
+    setError(null);
+    try {
+      if (await loginAdmin(username.trim(), password)) {
+        router.push('/');
+      } else {
+        setError('Incorrect admin username or password.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Incorrect admin username or password.');
     }
   }
 

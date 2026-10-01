@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     # app/services/evidence_evaluator.py.
     use_bedrock_mock: bool = True
 
+    # Cognito admin auth + admin video overrides (set by Terraform on Lambda).
+    # Unset locally, where the admin video endpoints are unavailable.
+    cognito_user_pool_id: str = ""
+    admin_videos_table_name: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

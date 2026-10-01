@@ -19,7 +19,7 @@ Run locally with: `uvicorn app.main:app --reload --port 8000`
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, evidence, health, profiles, roles
+from app.api import auth, content, evidence, health, profiles, roles
 from app.core.config import get_settings
 
 
@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(profiles.router)
     app.include_router(roles.router)
     app.include_router(evidence.router)
+    app.include_router(content.router)
 
     return app
 

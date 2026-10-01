@@ -66,6 +66,7 @@ export function SkillDetailBoard({ role, skill, progress, quiz }: SkillDetailBoa
   const [adminTitle, setAdminTitle] = useState('');
   const [adminUrl, setAdminUrl] = useState('');
   const [adminNote, setAdminNote] = useState('');
+  const [adminError, setAdminError] = useState<string | null>(null);
 
   useEffect(() => {
     setCompleted(getCompletedSkillIds(role.id).has(skill.id));
@@ -73,13 +74,19 @@ export function SkillDetailBoard({ role, skill, progress, quiz }: SkillDetailBoa
     setPracticalSubmissionState(getPracticalSubmission(role.id, skill.id));
     setVideoWatchedState(getVideoWatched(role.id, skill.id));
     setIsAdmin(isAdminLoggedIn());
-    setVideoOverrideState(getVideoOverride(skill.id));
+    let cancelled = false;
+    void Promise.resolve(getVideoOverride(skill.id)).then((override) => {
+      if (!cancelled) setVideoOverrideState(override);
+    });
     try {
       const raw = window.localStorage.getItem(videoSuggestionStorageKey(skill.id));
       setVideoSuggestions(raw ? (JSON.parse(raw) as VideoSuggestion[]) : []);
     } catch {
       setVideoSuggestions([]);
     }
+    return () => {
+      cancelled = true;
+    };
   }, [role.id, skill.id]);
 
   const video = videoOverride ?? {
@@ -96,11 +103,17 @@ export function SkillDetailBoard({ role, skill, progress, quiz }: SkillDetailBoa
     });
   }
 
-  function handleAdminVideoSubmit(event: FormEvent) {
+  async function handleAdminVideoSubmit(event: FormEvent) {
     event.preventDefault();
     if (!adminTitle.trim() || !adminUrl.trim()) return;
     const override: VideoOverride = { videoTitle: adminTitle.trim(), youtubeUrl: adminUrl.trim(), note: adminNote.trim() || undefined };
-    setVideoOverride(skill.id, override);
+    setAdminError(null);
+    try {
+      await setVideoOverride(skill.id, override);
+    } catch (error) {
+      setAdminError(error instanceof Error ? error.message : 'Could not save the video.');
+      return;
+    }
     setVideoOverrideState(override);
     setShowAdminForm(false);
   }
@@ -294,6 +307,11 @@ export function SkillDetailBoard({ role, skill, progress, quiz }: SkillDetailBoa
             >
               Save video
             </button>
+            {adminError && (
+              <p role="alert" className="text-xs text-red-600 dark:text-red-400">
+                {adminError}
+              </p>
+            )}
           </form>
         )}
 
