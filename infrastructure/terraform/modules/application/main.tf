@@ -43,24 +43,37 @@ resource "aws_cloudfront_distribution" "frontend" {
 
     forwarded_values {
       query_string = false
-      cookies { forward = "none" }
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.frontend_routing.arn
     }
   }
 
   custom_error_response {
     error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
+    response_code         = 404
+    response_page_path    = "/404.html"
     error_caching_min_ttl = 0
   }
 
   restrictions {
-    geo_restriction { restriction_type = "none" }
+    geo_restriction {
+      restriction_type = "none"
+    }
   }
-  viewer_certificate { cloudfront_default_certificate = true }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
   tags = local.tags
 }
-
 data "aws_iam_policy_document" "frontend_bucket" {
   statement {
     actions   = ["s3:GetObject"]
@@ -316,4 +329,12 @@ resource "aws_budgets_budget" "monthly" {
     notification_type          = "ACTUAL"
     subscriber_email_addresses = var.budget_alert_emails
   }
+}
+resource "aws_cloudfront_function" "frontend_routing" {
+  name    = "${local.name_prefix}-frontend-routing"
+  runtime = "cloudfront-js-2.0"
+  comment = "Rewrite Next.js static routes to index.html"
+  publish = true
+
+  code = file("${path.module}/cloudfront-functions/frontend-routing.js")
 }
