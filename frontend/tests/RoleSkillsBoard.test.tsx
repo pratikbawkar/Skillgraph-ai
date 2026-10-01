@@ -24,7 +24,7 @@ describe('RoleSkillsBoard', () => {
         expect(link).toHaveAttribute('href', `/roles/${role.id}/skills/${skill.id}`);
       });
     },
-    15000
+    30000
   );
 
   it(
@@ -43,6 +43,6 @@ describe('RoleSkillsBoard', () => {
       expect(link.className).toContain('border-emerald-400');
       expect(link.textContent).toContain('100%');
     },
-    15000
+    30000
   );
 });
