@@ -78,6 +78,8 @@ jobs:
           NEXT_PUBLIC_USE_MOCKS: 'false'
         run: |
           echo "NEXT_PUBLIC_API_BASE_URL=$(terraform -chdir=../infrastructure/terraform/environments/prod output -raw api_url)" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_COGNITO_REGION=ap-south-1" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_COGNITO_CLIENT_ID=$(terraform -chdir=../infrastructure/terraform/environments/prod output -raw cognito_web_client_id)" >> "$GITHUB_ENV"
 
       - name: Compile production frontend
         working-directory: frontend

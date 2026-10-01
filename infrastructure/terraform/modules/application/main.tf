@@ -125,6 +125,18 @@ resource "aws_dynamodb_table" "progress" {
   tags = local.tags
 }
 
+resource "aws_dynamodb_table" "admin_videos" {
+  name         = "${local.name_prefix}-admin-videos"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "skillId"
+  attribute {
+    name = "skillId"
+    type = "S"
+  }
+  point_in_time_recovery { enabled = var.environment == "prod" }
+  tags = local.tags
+}
+
 resource "aws_cognito_user_pool" "users" {
   name                     = "${local.name_prefix}-users"
   auto_verified_attributes = ["email"]
@@ -147,6 +159,12 @@ resource "aws_cognito_user_pool_client" "web" {
   explicit_auth_flows                  = ["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH"]
   supported_identity_providers         = ["COGNITO"]
   allowed_oauth_flows_user_pool_client = false
+}
+
+resource "aws_cognito_user_group" "admin" {
+  name         = "admin"
+  user_pool_id = aws_cognito_user_pool.users.id
+  description  = "Skill Orbit administrators who may update recommended videos"
 }
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -173,6 +191,14 @@ data "aws_iam_policy_document" "lambda" {
   statement {
     actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query"]
     resources = [aws_dynamodb_table.users.arn, aws_dynamodb_table.progress.arn]
+  }
+  statement {
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
+    resources = [aws_dynamodb_table.admin_videos.arn]
+  }
+  statement {
+    actions   = ["cognito-idp:AdminListGroupsForUser"]
+    resources = [aws_cognito_user_pool.users.arn]
   }
   dynamic "statement" {
     for_each = length(var.bedrock_model_arns) == 0 ? [] : [true]
@@ -208,13 +234,14 @@ resource "aws_lambda_function" "api" {
 
   environment {
     variables = {
-      ENVIRONMENT           = var.environment
-      CORS_ORIGINS          = join(",", concat(["https://${aws_cloudfront_distribution.frontend.domain_name}"], var.additional_cors_origins))
-      COGNITO_USER_POOL_ID  = aws_cognito_user_pool.users.id
-      COGNITO_APP_CLIENT_ID = aws_cognito_user_pool_client.web.id
-      USERS_TABLE_NAME      = aws_dynamodb_table.users.name
-      PROGRESS_TABLE_NAME   = aws_dynamodb_table.progress.name
-      USE_BEDROCK_MOCK      = "true"
+      ENVIRONMENT             = var.environment
+      CORS_ORIGINS            = join(",", concat(["https://${aws_cloudfront_distribution.frontend.domain_name}"], var.additional_cors_origins))
+      COGNITO_USER_POOL_ID    = aws_cognito_user_pool.users.id
+      COGNITO_APP_CLIENT_ID   = aws_cognito_user_pool_client.web.id
+      USERS_TABLE_NAME        = aws_dynamodb_table.users.name
+      PROGRESS_TABLE_NAME     = aws_dynamodb_table.progress.name
+      ADMIN_VIDEOS_TABLE_NAME = aws_dynamodb_table.admin_videos.name
+      USE_BEDROCK_MOCK        = "true"
     }
   }
   depends_on = [aws_cloudwatch_log_group.api]

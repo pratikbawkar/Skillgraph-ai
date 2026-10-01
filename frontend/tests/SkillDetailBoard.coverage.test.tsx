@@ -351,6 +351,31 @@ describe('SkillDetailBoard coverage paths', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows a persisted override and keeps the form open when saving fails', async () => {
+    adminMocks.isAdminLoggedIn.mockReturnValue(true);
+    adminMocks.getVideoOverride.mockResolvedValue({
+      videoTitle: 'Persisted Title',
+      youtubeUrl: 'https://youtube.com/watch?v=persisted',
+    });
+    adminMocks.setVideoOverride.mockRejectedValue(new Error('Not authorised.'));
+
+    render(<SkillDetailBoard role={role} skill={skill} progress={progress} />);
+
+    expect(await screen.findByRole('link', { name: /Persisted Title/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit recommended video for AWS (admin)' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Admin video title' }), {
+      target: { value: 'New' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Admin video URL' }), {
+      target: { value: 'https://youtube.com/watch?v=new' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save video' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Not authorised.');
+    expect(screen.getByRole('link', { name: /Persisted Title/ })).toBeInTheDocument();
+  });
+
   it('handles an existing practical submission', async () => {
     progressMocks.getPracticalSubmission.mockReturnValue({
       githubUrl: 'https://github.com/pratik/already-submitted',

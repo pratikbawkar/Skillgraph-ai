@@ -21,3 +21,9 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Environment files
+.env.local
+.env*.local
+
+# Next.js
+.next/
