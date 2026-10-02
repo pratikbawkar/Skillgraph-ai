@@ -1,0 +1,98 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Learner login, role, and video workflow",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "learner_flow", "label": "Learner · browser flow" },
+    { "id": "auth", "label": "Identity status" }
+  ],
+  "phases": [
+    { "id": "signin", "label": "Sign in", "fromCol": 0, "toCol": 2 },
+    { "id": "choose_role", "label": "Choose a role", "fromCol": 3, "toCol": 3 },
+    { "id": "learning", "label": "Open a learning resource", "fromCol": 4, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["login", "current_auth", "session_home", "cloud_engineer", "skill_detail", "youtube"],
+  "semanticChecks": {
+    "allowedRoots": ["login"],
+    "allowedTerminals": ["youtube"]
+  },
+  "nodes": [
+    {
+      "id": "login",
+      "lane": "learner_flow",
+      "col": 0,
+      "type": "frontend",
+      "label": "Login form",
+      "sublabel": "email + password",
+      "brand": "next-js",
+      "width": 160
+    },
+    {
+      "id": "current_auth",
+      "lane": "auth",
+      "col": 1,
+      "type": "backend",
+      "label": "Current auth",
+      "sublabel": "mock token or HMAC",
+      "brand": "fastapi",
+      "width": 160
+    },
+    {
+      "id": "session_home",
+      "lane": "learner_flow",
+      "col": 2,
+      "type": "frontend",
+      "label": "Session stored · home",
+      "sublabel": "save token + user locally",
+      "width": 160
+    },
+    {
+      "id": "cloud_engineer",
+      "lane": "learner_flow",
+      "col": 3,
+      "type": "frontend",
+      "label": "Cloud Engineer card",
+      "sublabel": "link → /roles/cloud-engineer",
+      "width": 160
+    },
+    {
+      "id": "skill_detail",
+      "lane": "learner_flow",
+      "col": 4,
+      "type": "frontend",
+      "label": "Skill detail · video",
+      "sublabel": "seeded/admin video URL",
+      "width": 160
+    },
+    {
+      "id": "youtube",
+      "lane": "learner_flow",
+      "col": 5,
+      "type": "external",
+      "label": "YouTube",
+      "sublabel": "direct URL · opens new tab",
+      "brand": "youtube",
+      "width": 140
+    }
+  ],
+  "edges": [
+    { "from": "login", "to": "current_auth", "label": "USE_MOCKS selects behavior", "role": "main" },
+    { "from": "current_auth", "to": "session_home", "label": "returns user + token", "role": "main" },
+    { "from": "session_home", "to": "cloud_engineer", "label": "return home · choose role", "role": "main" },
+    { "from": "cloud_engineer", "to": "skill_detail", "label": "open roadmap · tap a skill", "role": "main" },
+    { "from": "skill_detail", "to": "youtube", "label": "click URL · target=_blank", "role": "main", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Current behavior and content links",
+      "items": [
+        "Mock mode returns mock-token. Production mode calls FastAPI /auth/login, which still uses HMAC mock auth. Cognito is Terraform-defined and used for admin login; learner sign-in is not wired to it.",
+        "The Cloud Engineer card routes to /roles/cloud-engineer. Skill details open the configured YouTube URL directly; seeded examples include DRAFT placeholders and official-channel status is not enforced."
+      ]
+    }
+  ]
+}

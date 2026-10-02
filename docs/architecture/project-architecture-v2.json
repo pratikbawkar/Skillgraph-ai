@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Skill Orbit | End-to-end architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1120, 480],
+    "views": [
+      {
+        "id": "runtime",
+        "label": "Application runtime",
+        "focus": ["learner", "cdn", "frontend", "api_gateway", "lambda", "database", "youtube"],
+        "note": "Follow learner traffic through the static app, API, configured data services, and video links."
+      },
+      {
+        "id": "delivery",
+        "label": "Build and deploy",
+        "focus": ["actions", "terraform", "cdn", "api_gateway", "lambda"],
+        "note": "See GitHub Actions trigger the production Terraform stack and its AWS resources."
+      },
+      {
+        "id": "identity-data",
+        "label": "Identity and data status",
+        "focus": ["frontend", "cognito", "lambda", "database"],
+        "note": "Distinguish the admin Cognito path from the pending learner-auth and database integrations."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "actions",
+      "type": "messagebus",
+      "label": "GitHub Actions",
+      "sublabel": "develop CI · main CD",
+      "brand": "github-actions",
+      "pos": [30, 30],
+      "size": [150, 90]
+    },
+    {
+      "id": "terraform",
+      "type": "backend",
+      "label": "Terraform",
+      "sublabel": "production root · IaC",
+      "brand": "terraform",
+      "pos": [240, 30],
+      "size": [150, 90]
+    },
+    {
+      "id": "learner",
+      "type": "external",
+      "label": "Learner browser",
+      "sublabel": "public HTTPS",
+      "pos": [30, 180],
+      "size": [150, 90]
+    },
+    {
+      "id": "cdn",
+      "type": "cloud",
+      "label": "CloudFront + S3",
+      "sublabel": "private static site",
+      "pos": [240, 180],
+      "size": [150, 90]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Next.js frontend",
+      "sublabel": "TypeScript · React",
+      "brand": "next-js",
+      "pos": [420, 180],
+      "size": [150, 90]
+    },
+    {
+      "id": "api_gateway",
+      "type": "cloud",
+      "label": "API Gateway",
+      "sublabel": "AWS HTTP API",
+      "pos": [600, 180],
+      "size": [150, 90]
+    },
+    {
+      "id": "lambda",
+      "type": "backend",
+      "label": "FastAPI · Lambda",
+      "sublabel": "Python 3.11 · ARM64",
+      "brand": "python",
+      "pos": [780, 180],
+      "size": [150, 90]
+    },
+    {
+      "id": "youtube",
+      "type": "external",
+      "label": "YouTube",
+      "sublabel": "direct link · draft seeds",
+      "brand": "youtube",
+      "pos": [30, 340],
+      "size": [150, 90]
+    },
+    {
+      "id": "cognito",
+      "type": "security",
+      "label": "Amazon Cognito",
+      "sublabel": "Terraform-defined · admin login",
+      "pos": [420, 340],
+      "size": [150, 90]
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "label": "DynamoDB tables",
+      "sublabel": "defined · app still in-memory",
+      "pos": [780, 340],
+      "size": [150, 90]
+    },
+    {
+      "id": "operations",
+      "type": "cloud",
+      "label": "AWS monitoring",
+      "sublabel": "CloudWatch · SNS · Budget",
+      "pos": [938, 340],
+      "size": [150, 90]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "AWS · ap-south-1 · Terraform-defined; live status unverified",
+      "wraps": ["cdn", "api_gateway", "lambda", "cognito", "database", "operations"],
+      "pad": 18
+    }
+  ],
+  "connections": [
+    { "id": "ci-to-iac", "from": "actions", "to": "terraform", "label": "main CD" },
+    { "id": "iac-to-cdn", "from": "terraform", "to": "cdn", "label": "provisions", "fromSide": "bottom", "toSide": "top", "labelAt": [315, 134] },
+    { "id": "learner-to-cdn", "from": "learner", "to": "cdn", "label": "HTTPS", "labelAt": [210, 286] },
+    { "id": "cdn-to-app", "from": "cdn", "to": "frontend", "label": "static", "labelAt": [350, 286] },
+    { "id": "app-to-api", "from": "frontend", "to": "api_gateway", "label": "HTTP", "labelAt": [575, 286] },
+    { "id": "api-to-lambda", "from": "api_gateway", "to": "lambda", "label": "invoke", "labelAt": [755, 286] },
+    { "id": "api-to-data", "from": "lambda", "to": "database", "label": "pending", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelAt": [950, 326] },
+    { "id": "app-to-cognito", "from": "frontend", "to": "cognito", "label": "admin login only", "labelAt": [495, 286] },
+    { "id": "app-to-youtube", "from": "frontend", "to": "youtube" }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Current integration status",
+      "items": [
+        "Terraform defines the production stack; a successful apply and public URL are not verified by repository files.",
+        "Learner auth still uses mock tokens and backend repositories are in-memory; Cognito/DynamoDB learner integration is pending."
+      ]
+    }
+  ]
+}

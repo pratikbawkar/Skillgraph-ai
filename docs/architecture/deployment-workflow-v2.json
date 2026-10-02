@@ -1,0 +1,104 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Local push to AWS production",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "change", "label": "Local developer · GitHub branches" },
+    { "id": "ci_cd", "label": "GitHub Actions · CI and production gate" },
+    { "id": "aws", "label": "AWS production · ap-south-1" }
+  ],
+  "phases": [
+    { "id": "push", "label": "Push to develop", "fromCol": 0, "toCol": 1 },
+    { "id": "checks", "label": "Run CI", "fromCol": 2, "toCol": 2, "variant": "emphasis" },
+    { "id": "promote", "label": "Review and merge", "fromCol": 3, "toCol": 3 },
+    { "id": "release", "label": "Production CD", "fromCol": 4, "toCol": 5, "variant": "emphasis" }
+  ],
+  "groups": [
+    { "id": "blocking_gates", "label": "Blocking quality gates", "lane": "ci_cd", "fromCol": 2, "toCol": 2, "variant": "security" }
+  ],
+  "mainPath": ["local_push", "develop", "develop_ci", "merge_main", "production_cd", "aws_deploy"],
+  "semanticChecks": {
+    "allowedRoots": ["local_push"],
+    "allowedTerminals": ["aws_deploy"]
+  },
+  "nodes": [
+    {
+      "id": "local_push",
+      "lane": "change",
+      "col": 0,
+      "type": "external",
+      "label": "Local git push",
+      "sublabel": "origin/develop",
+      "width": 158
+    },
+    {
+      "id": "develop",
+      "lane": "change",
+      "col": 1,
+      "type": "messagebus",
+      "label": "develop branch",
+      "sublabel": "push triggers CI",
+      "brand": "github",
+      "width": 158
+    },
+    {
+      "id": "develop_ci",
+      "lane": "ci_cd",
+      "col": 2,
+      "type": "security",
+      "label": "GitHub Actions CI",
+      "sublabel": "backend · frontend · Terraform",
+      "brand": "github-actions",
+      "width": 178
+    },
+    {
+      "id": "merge_main",
+      "lane": "change",
+      "col": 3,
+      "type": "external",
+      "label": "PR review + merge",
+      "sublabel": "reviewer merges to main",
+      "width": 170
+    },
+    {
+      "id": "production_cd",
+      "lane": "ci_cd",
+      "col": 4,
+      "type": "security",
+      "label": "Production CD gate",
+      "sublabel": "main push · reruns CI",
+      "brand": "github-actions",
+      "width": 170
+    },
+    {
+      "id": "aws_deploy",
+      "lane": "aws",
+      "col": 5,
+      "type": "cloud",
+      "label": "Deploy to AWS",
+      "sublabel": "OIDC · Terraform · S3 / CloudFront",
+      "brand": "terraform",
+      "width": 178
+    }
+  ],
+  "edges": [
+    { "from": "local_push", "to": "develop", "label": "git push origin develop", "role": "main" },
+    { "from": "develop", "to": "develop_ci", "label": "push trigger", "role": "main" },
+    { "from": "develop_ci", "to": "merge_main", "label": "green checks · PR review", "role": "main", "variant": "emphasis" },
+    { "from": "merge_main", "to": "production_cd", "label": "merge emits main push", "role": "main" },
+    { "from": "production_cd", "to": "aws_deploy", "label": "quality gates pass", "role": "main", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Checks, deploy steps, and current verification",
+      "items": [
+        "Backend: Python 3.11, Ruff, mypy, Bandit, pip-audit, pytest with 80% coverage. Frontend: Node 24, ESLint, TypeScript, Vitest, npm audit, Codecov. Terraform: fmt, init, validate.",
+        "Main CD reruns CI, packages the ARM64 Lambda, assumes AWS via OIDC, applies Terraform, builds Next.js, syncs S3, and invalidates CloudFront. Reviewers merge main manually; no post-deploy smoke test or verified live apply is present."
+      ]
+    }
+  ]
+}

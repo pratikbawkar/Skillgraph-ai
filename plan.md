@@ -1,438 +1,302 @@
-# Skill Orbit — Project Plan
-
-## 1. Project Overview
-
-**Product name:** Skill Orbit
-*(Older code and planning references may say SkillGraph AI.)*
-
-**Repository directory:** `Skill-Orbit`
-
-**Category:** `#social-good`
-
-**Lane:** `#community`
-
-**Primary goal:**
-Help students and early-career learners identify skill gaps for a target role and turn those gaps into a practical, project-based learning roadmap with measurable skill progress.
-
-### Current implementation status (repository snapshot)
-
-This section records what is present in the repository; it does not claim that cloud resources have been applied or that a public deployment is live.
-
-* The frontend is a Next.js, TypeScript, Tailwind application configured for static export. Mock data is the default; its API client can be configured to call the FastAPI API.
-* The backend is a FastAPI application with mock HMAC authentication, in-memory user/progress repositories, seeded role data, deterministic progress scoring, and practical-task completion tracking. It does not yet use Cognito, DynamoDB, or Bedrock.
-* A Mangum Lambda entry point and a production-only Terraform configuration exist. Automated deployment targets production and uses a private S3/CloudFront frontend, API Gateway HTTP API, Lambda, DynamoDB tables, Cognito user pool/client, CloudWatch log group/alarms, SNS notifications, and an AWS Budget. S3 is used for the static frontend and is not used for user evidence/file storage in the MVP. Their existence in code is not evidence that they have been applied in AWS.
-* The Lambda package script targets Python 3.11 on Linux ARM64. The Terraform Lambda environment currently sets `USE_BEDROCK_MOCK=true`.
-* GitHub Actions runs CI on pull requests to `main` and `develop`, and pushes to `develop`. A push to `main` calls the CI workflow before deploying the production Terraform stack and frontend to AWS through GitHub OIDC. AWS deployment remains unverified until the first successful apply and live checks.
-* The repository currently has frontend component tests and backend unit/integration tests. Playwright E2E tests, k6 performance scripts, and architecture/ADR documentation are planned but are not present in the tracked source tree.
-* The current application is still at the Phase 1 application-readiness stage. AWS infrastructure definitions have been added ahead of completion of the production application integration; that does not satisfy Phase 2 exit criteria. Treat all AWS resources as proposed/configured in Terraform until a deployment is independently verified.
-
-### Core product loop
-
-```text
+Skill Orbit - Project Plan
+1. Project identity
+Product name: Skill Orbit
+Repository: https://github.com/pratikbawkar/Skillgraph-ai
+Live production application: https://d3g0zz1ejf4met.cloudfront.net/
+Category: #social-good
+Lane: #community
+Mission
+Skill Orbit helps students and early-career learners identify skill gaps for a target technical role and turn those gaps into a practical, project-based learning roadmap with measurable progress.
+The MVP deliberately focuses on three roles:
+1. Cloud Engineer
+2. DevOps Engineer
+3. Python Developer
+The product is designed around measurable capability rather than an opaque AI-generated score.
+2. Current implementation status
+The project is now in the production + competition-submission stage.
+Production status
+- The application is deployed to AWS and is publicly reachable through CloudFront.
+- Production frontend hosting uses a private S3 bucket behind CloudFront Origin Access Control.
+- The API is exposed through API Gateway and backed by AWS Lambda running FastAPI through Mangum.
+- Production admin authentication uses Amazon Cognito.
+- The Cognito admin group controls administrative access to recommended-video editing.
+- Recommended-video overrides are persisted in an on-demand DynamoDB table keyed by skillId.
+- The production Lambda receives the admin-video table name and Cognito user-pool ID from Terraform.
+- The Lambda role is restricted to the required DynamoDB operations on the admin-video table and AdminListGroupsForUser on the Cognito user pool.
+- The current Terraform configuration intentionally keeps USE_BEDROCK_MOCK=true; no live Bedrock model call should be claimed as part of the deployed MVP.
+- The application remains production-only; no staging deployment is maintained.
+Verified quality status
+The final local validation before the production push included:
+- Terraform formatting: passed.
+- Terraform validation: passed.
+- Backend Ruff: passed.
+- Backend Mypy: passed.
+- Backend Bandit: passed.
+- Backend tests: 55 passed, 96.96% coverage.
+- Frontend TypeScript: passed.
+- Frontend lint: passed.
+- Frontend npm audit: 0 vulnerabilities.
+- Frontend tests: 56 passed.
+- Frontend coverage: 86.34% statements, 80.39% branches, 87.34% functions, 88.48% lines.
+- Production CI completed successfully.
+- Production CD completed successfully.
+- Production admin login was manually verified with Cognito.
+- The production admin account was added to the admin group and successfully authenticated.
+pip-audit was not included in the final local validation because backend dependencies were not changed during the final admin-content implementation. CI still contains the dependency-audit step and should remain the authoritative pre-merge gate.
+3. Product loop
 Assess
-   ↓
+  ↓
 Identify skill gaps
-   ↓
-Generate learning roadmap
-   ↓
-Learn / Practice
-   ↓
+  ↓
+Follow the role skill roadmap
+  ↓
+Learn / practice
+  ↓
 Complete practical skill tasks
-   ↓
-Recalculate skill progress
-   ↓
-Update skill graph
-   ↓
-Recommend next action
-```
-
-The product should focus on turning learning into **measurable capability**, not simply recommending courses.
-
----
-
-## 2. Product Goals
-
-### MVP goals
-
-1. User registration and authentication.
-2. User profile containing current skills, target role, and learning availability.
-3. Skill assessment.
-4. Deterministic skill-gap calculation.
-5. Personalized AI-assisted roadmap.
-6. Project-based learning recommendations.
-7. Practical skill tasks/checkpoints that users can complete to demonstrate progress.
-8. Progress dashboard.
-9. Production AWS deployment with a public URL.
-10. Automated CI/CD with strong testing, linting, security checks, and Codecov.
-11. Support exactly three curated target roles for the MVP:
-
-    * Cloud Engineer
-    * DevOps Engineer
-    * Python Developer
-12. Show an overall role-progress percentage for every user.
-13. Show an individual progress bar and percentage for every skill in the selected role.
-14. Provide an `i` (information) control for every skill that opens skill details and one admin-curated YouTube learning resource.
-15. Keep skill-progress calculations transparent and explainable; do not use an opaque LLM-generated score as the sole source of progress.
-
-### MVP skill-progress model
-
-The progress calculation must be deterministic and visible to the user.
-
-The MVP skill-progress model is:
-
-```text
+  ↓
+Recalculate deterministic progress
+  ↓
+See updated skill graph / roadmap
+  ↓
+Take the next recommended action
+The product goal is to turn learning into measurable capability rather than simply listing courses or videos.
+4. MVP requirements
+Roles
+Support exactly three curated target roles:
+- Cloud Engineer
+- DevOps Engineer
+- Python Developer
+Progress
+Every selected role must show:
+- an overall progress percentage;
+- an individual progress bar and percentage for every skill;
+- the components that contributed to each skill's progress.
+The scoring model is deterministic and transparent:
 Self assessment       20%
-
 Objective quiz        30%
-
 Practical tasks       50%
-
 --------------------------
-
 Skill progress        100%
-```
-
-### Progress rules
-
-* A missing component contributes `0` until the user completes it.
-* Each skill has a small set of predefined practical tasks/checkpoints.
-* The MVP should use approximately 1–3 practical tasks per skill.
-* A practical task represents a concrete learning or implementation action.
-* Completing a practical task increases the practical-task component of the skill progress.
-* The UI must show which components contributed to the current percentage.
-* Practical task completion must be deterministic and transparent.
-* The same scoring formula is used for every user.
-* Personalization affects recommendations and task selection, not the scoring formula.
-* The weights may be revised later only through a documented product decision / ADR.
-* The overall role-progress percentage is derived from the progress of the skills required by that role.
-
-### Practical task examples
-
-Examples of MVP practical tasks include:
-
-```text
-Create an S3 bucket
-Write a basic Lambda function
-Create a Docker image
-Write a Python function using exception handling
-Create an IAM policy
-Deploy a simple application
-Write a basic Terraform resource
-Create a GitHub Actions workflow
-```
-
-These are examples only. The final tasks should be curated according to each role and skill.
-
-### Practical task MVP rules
-
-* Users can mark a task as completed.
-* Completion automatically recalculates the related skill percentage.
-* The updated skill percentage is reflected in the selected role's overall progress.
-* Repeated completion of an already-completed task must not increase the score incorrectly.
-* The backend must calculate progress deterministically.
-* MVP task tracking does not require file uploads, GitHub repository analysis, portfolio verification, or external evidence processing.
-* Practical tasks are a lightweight progress mechanism rather than a separate evidence-management system.
-
-### Overall role progress
-
-The overall role-progress percentage is derived from the progress of the skills required by that role.
-
-The MVP must not use:
-
-* An LLM-generated overall score.
-* An opaque AI confidence score.
-* Arbitrary AI weighting.
-
-The calculation must be explainable from the underlying skill percentages.
-
-### MVP learning resources
-
-Each skill in the curated skill graph must have one admin-managed recommended YouTube resource. The MVP does not require YouTube search integration.
-
-Each skill resource record should contain at minimum:
-
-* Skill identifier.
-* Video title.
-* YouTube URL.
-* Optional short reason/recommendation note.
-* Admin/content owner metadata.
-
-Users access the resource through the skill's `i` button.
-
-AI must not silently replace or invent the curated URL.
-
-### Non-goals for MVP
-
-Do not attempt to support:
-
-* Every career.
-* Every technology.
-* Every learning provider.
-* File-upload-based evidence collection.
-* GitHub evidence analysis.
-* Portfolio verification.
-* Automated evidence evaluation.
-* Complex learner verification systems.
-* Large-scale learning-provider integrations.
-
-Start with a small, curated set of target roles and a high-quality skill graph.
-
----
-
-## 3. Three-Phase Delivery Plan
-
-The phase definitions below are the intended delivery gates. The repository contains some later-phase Terraform groundwork, but that groundwork does not mean the product has passed the Phase 1 exit criteria or completed an AWS deployment. Keep the current application behavior and verified deployment state explicit when updating this plan.
-
-### Phase 1 — Local Development + Vercel Validation
-
-**Status:** In progress.
-
-The frontend and backend have local development setups and automated unit/component/API tests. Vercel is configured for a static frontend with mock data. The critical user journey, a verified Vercel deployment, live smoke checks, and the full plan quality gates still require evidence before Phase 1 can be called complete.
-
-Goal: validate the product, UX, API behavior, AI seams, and automated testing before relying on AWS production services.
-
-```text
-Local frontend + FastAPI backend
-(mock/in-memory defaults)
-        ↓
-Unit + integration + frontend tests
-and quality checks
-        ↓
-GitHub Actions CI on develop PRs/pushes
-        ↓
-Vercel frontend validation deployment
-(mock data by default)
-        ↓
-Public test application
-+ real smoke/E2E verification
-```
-
-#### Rules
-
-* Build and validate locally first.
-* Use Vercel only as a Phase 1 frontend validation/demo environment.
-* Do not introduce Vercel-specific services or architecture that makes AWS migration harder.
-* Keep application logic and API contracts portable to AWS.
-* Record the actual Vercel project root, deployment branch, environment variables, URL, and verification evidence.
-* The deployment guide and workflow must agree before treating this gate as complete.
-
-#### Phase 1 exit criteria
-
-* Core user journeys work locally against the intended mock or local API configuration.
-* CI passes with the required lint, type, test, security, and coverage gates.
-* Critical Playwright E2E flows pass.
-* Vercel deployment is publicly reachable and its deployment branch/configuration is verified.
-* Real smoke tests pass against the deployed application.
-* The critical MVP flow works:
-
-  * Register/Login
-  * Create profile
-  * Select target role
-  * Complete assessment
-  * Generate roadmap
-  * Complete a practical task
-  * Verify skill progress updates
-  * View dashboard
-
-### Phase 2 — AWS Deployment + Public Production
-
-**Status:** A production-only Terraform foundation exists; application integration and verified deployment remain incomplete.
-
-Goal: deploy the validated application to the planned low-cost AWS serverless architecture and expose it publicly.
-
-```text
-Phase 1 validated application
-        ↓
-CI checks
-        ↓
-CD applies production Terraform and deploys the app
-        ↓
-Production deployment verification
-        ↓
-Production verification
-        ↓
-Terraform-managed production deployment
-        ↓
-Production smoke + critical E2E verification
-```
-
-#### Rules
-
-* Reuse validated application behavior from Phase 1.
-* Provision permanent AWS infrastructure through Terraform.
-* Run CI before the production Terraform apply.
-* Keep the AWS architecture serverless and cost-conscious.
-* Do not add EC2, EKS, RDS, NAT Gateway, ALB, Managed Prometheus, or Managed Grafana unless a documented requirement appears.
-* Integrate and verify Cognito authentication and durable DynamoDB repositories before describing those services as application capabilities.
-* Implement the required Bedrock roadmap/recommendation capability before describing live Bedrock behavior as implemented.
-* Run CI before every deployment.
-* Perform real post-deployment verification after every deployment.
-* The AWS production application must be publicly reachable.
-
-#### Phase 2 exit criteria
-
-* The production Terraform plan is applied successfully through CD.
-* Production AWS deployment succeeds and its public URL is verified.
-* Authentication uses the intended Cognito integration.
-* Core API and database operations use durable AWS-backed repositories.
-* Bedrock-backed roadmap/recommendation behavior is implemented, permission-scoped, and verified if it remains an MVP requirement.
-* Practical task completion and deterministic skill-progress updates work with the AWS-backed application.
-* Production smoke tests and critical production E2E tests pass.
-* CloudWatch logging, required alarms, alert subscriptions, and AWS budget controls are configured and verified.
-
-### Phase 3 — Production Hardening + Competition Submission
-
-Goal: make the live AWS application secure, reliable, cost-controlled, and ready for judging.
-
-#### Focus
-
-* Security hardening and least-privilege IAM.
-* Controlled performance testing with k6.
-* Error handling and resilience.
-* Cost optimization.
-* CloudWatch log/metric review and alarms.
-* Production documentation and architecture diagrams.
-* AI-assisted development story and evidence.
-* CI/CD and Codecov evidence.
-* AWS coding-agent connection evidence.
-* Final public URL verification.
-* Competition category/lane tags and submission materials.
-
-#### Phase 3 exit criteria
-
-* No critical security findings remain.
-* Production CI/CD is repeatable and includes genuine deployment verification.
-* Regression tests pass.
-* Cost controls are documented and active.
-* README and architecture documentation are complete.
-* Live AWS URL is stable and publicly reachable.
-* Competition evidence is complete.
-
-**Important distinction:** competition/submission evidence refers to project development and competition requirements. It is not a user-facing Skill Orbit MVP feature.
-
----
-
-## 4. Final Technology Stack
-
-### Frontend
-
-* Next.js
-* TypeScript
-* Tailwind CSS
-* Vitest
-* React Testing Library
-* Playwright
-
-### Backend
-
-* Python
-* FastAPI
-* Pydantic
-* Boto3
-* pytest
-* httpx
-* moto
-* Mangum
-
-### AWS
-
-* Amazon S3
-* Amazon CloudFront
-* Amazon API Gateway (HTTP API)
-* AWS Lambda
-* Amazon DynamoDB
-* Amazon Cognito
-* Amazon Bedrock
-* Amazon CloudWatch
-
-### Infrastructure / DevOps
-
-* Terraform
-* GitHub Actions
-* Docker for local development and CI where useful
-* GitHub Container Registry or Amazon ECR only if a container image is actually required
-
-### Quality / Security / Testing
-
-* Codecov
-* pytest
-* Vitest
-* React Testing Library
-* Playwright
-* k6
-* Bandit
-* pip-audit
-* npm audit (or equivalent dependency audit)
-* Trivy
-* Terraform fmt / validate / plan
-
-### AI-assisted development
-
-* Claude Code
-* GitHub Copilot
-* OpenAI / Codex
-
----
-
-## 5. AWS Architecture
-
-### Intended target architecture
-
-The target application is a cost-efficient serverless system. The diagram describes the intended integrated system, not the current application behavior.
-
-```text
+The same formula is used for every user. Personalization affects recommendations and task selection, not the scoring formula.
+Skill information
+Every skill has an i control that opens the skill-detail experience.
+The skill detail experience includes a recommended learning resource.
+Recommended learning resources
+Each skill has one curated YouTube resource.
+The resource contains, at minimum:
+- skill identifier;
+- video title;
+- YouTube URL;
+- optional note;
+- content-owner metadata where applicable.
+The application must not silently replace a curated URL with an AI-generated resource.
+Production administration for these resources uses Cognito + API Gateway/Lambda + DynamoDB.
+5. Production admin-content architecture
+Admin login
+   ↓
+Amazon Cognito
+   ↓
+Access token
+   ↓
+Skill Orbit frontend
+   ↓
+API Gateway
+   ↓
+Lambda / FastAPI
+   ↓
+Verify Cognito token + admin group
+   ↓
+DynamoDB admin-videos table
+API contract
+GET    /content/skills/{skill_id}/video
+PUT    /content/skills/{skill_id}/video
+DELETE /content/skills/{skill_id}/video
+GET is used to retrieve a persisted override.
+PUT and DELETE require a bearer access token and membership in the Cognito admin group.
+The frontend also checks the Cognito cognito:groups claim to decide whether to expose the admin UI. This is a UI check only; the backend independently enforces authorization.
+Local-development fallback
+When NEXT_PUBLIC_API_BASE_URL is empty, the original local mock login and localStorage video overrides remain available for development.
+The local fallback must never be configured as the production authentication mechanism.
+6. AWS architecture
 Internet
    ↓
-CloudFront → private S3 static frontend
+CloudFront
    ↓
-API Gateway HTTP API
+Private S3 bucket
+(static Next.js export)
+
+Frontend → API Gateway HTTP API
+              ↓
+           Lambda
+        FastAPI + Mangum
+          ├── Cognito admin authentication / authorization
+          ├── DynamoDB admin-video overrides
+          ├── existing application APIs
+          └── CloudWatch logging
+
+Terraform manages the AWS production stack.
+GitHub Actions assumes AWS through GitHub OIDC.
+Cost-conscious decisions
+- Production only; no staging environment.
+- S3 is private and accessed through CloudFront OAC.
+- CloudFront uses PriceClass_100.
+- DynamoDB tables use on-demand billing.
+- Admin-video point-in-time recovery is enabled in production.
+- API detailed route metrics remain disabled to avoid unnecessary CloudWatch metric cost.
+- Bedrock is mocked for the current deployment.
+7. Infrastructure as Code
+Terraform is the source of truth for the production AWS resources.
+The production module defines or manages:
+- S3 frontend bucket;
+- S3 public-access blocking;
+- CloudFront Origin Access Control;
+- CloudFront distribution;
+- CloudFront viewer-request routing function;
+- API Gateway HTTP API;
+- Lambda execution role and function;
+- DynamoDB users/progress tables already present in the application infrastructure;
+- DynamoDB admin-videos table;
+- Cognito user pool;
+- Cognito public web client;
+- Cognito admin group;
+- Lambda IAM permissions;
+- CloudWatch logs and alarms;
+- SNS notifications;
+- AWS budget controls where configured.
+Production Terraform state is stored in the dedicated S3 state bucket and uses Terraform's native S3 lock file mechanism.
+8. CI/CD delivery model
+develop
    ↓
-Lambda (Mangum → FastAPI)
-   ├── Cognito authentication
-   ├── DynamoDB users + progress + task completion
-   ├── Bedrock controlled model calls
-   └── CloudWatch logs + alarms → SNS alerts
-```
-
-S3 is used for static frontend hosting in the MVP.
-
-The MVP does not require S3-based user evidence or artifact storage.
-
-### Current infrastructure configuration in Terraform
-
-`infrastructure/terraform/modules/application` currently defines:
-
-* A private S3 bucket for the static frontend, CloudFront Origin Access Control, and a CloudFront distribution using the default certificate and `PriceClass_100`.
-* An API Gateway HTTP API with a `$default` route to a Python 3.11 ARM64 Lambda using `handler.handler` and payload format 2.0.
-* On-demand DynamoDB users and progress tables. Point-in-time recovery is enabled only for `prod`.
-* A Cognito user pool and public web client.
-* A Lambda execution role with CloudWatch log writes and DynamoDB read/write/query permissions. Bedrock `InvokeModel` is added only when model ARNs are configured.
-* A CloudWatch log group with environment-specific retention:
-
-  * 7 days production
-* Lambda/API 5xx alarms.
-* An SNS alert topic.
-* Budget-email subscriptions to `pratikbawkar33@gmail.com` and `sachin9890@gmail.com` in production.
-* A `$30` monthly AWS Budget with actual-spend alerts at `$10` and `$22`. AWS Budgets alerts but does not enforce a spending cap.
-
-Terraform defines the production root in:
-
-```text
-infrastructure/terraform/environments/
-```
-
-The example variables default to `ap-south-1`.
-
-The email, Bedrock model ARNs, and additional CORS origins are configurable.
-
-Production Terraform state uses an encrypted, versioned S3 backend with S3 state locking. The backend bucket must be created before initialization.
-
-### Current application integration gaps
-
-* `backend/app` uses in-memory repositories and mock token auth. The Cognito resources are not wired into the app's auth flow.
-* The app does not yet read/write DynamoDB. S3 is used for static frontend hosting and is not part of the MVP product-data flow.
-* The Terraform Lambda role grants DynamoDB access, but that does not create application persistence.
-* `USE_BEDROCK_MOCK` is true in Terraform. Setting it false currently raises `NotImplementedError`; there is no Bedrock client integration yet.
-* The static frontend supports build-time API configuration, but Vercel is set to use mocks.
-* AWS publishing is automated by the GitHub Actions production CD workflow after CI passes on pushes to `main`.
-* Do not claim AWS resources are live or the public AWS application is deployed without checking the AWS account and de
+GitHub Actions CI
+   ├── backend lint/type/security/tests
+   ├── frontend lint/type/tests/audit
+   ├── coverage
+   └── Terraform validation
+   ↓
+reviewed promotion to main
+   ↓
+Production CD
+   ├── CI quality gates
+   ├── GitHub OIDC → AWS
+   ├── Terraform init/apply
+   ├── production frontend build
+   ├── S3 sync
+   └── CloudFront invalidation
+   ↓
+Live AWS application
+Main remains the production branch. Production deployment must only happen from main.
+CI must run before production deployment.
+Production deployment must remain repeatable and Terraform-managed.
+9. Major engineering problems solved
+Terraform backend region failure
+The S3 backend initially failed because the AWS region was not supplied.
+Resolution: explicitly configure ap-south-1 during production Terraform initialization.
+GitHub OIDC trust failure
+GitHub Actions initially could not assume the production AWS role because the trust policy did not match the exact GitHub repository/environment identity.
+Resolution: restrict the OIDC trust relationship to the intended repository and production environment and use the correct sts.amazonaws.com audience.
+Missing Terraform IAM capability
+Terraform needed to inspect attached IAM policies during deployment.
+Resolution: add the required iam:ListAttachedRolePolicies permission to the deployment role policy.
+CloudFront clean-route failure
+Next.js static-export routes such as /roles/cloud-engineer were treated as direct S3 objects instead of /roles/cloud-engineer/index.html.
+Resolution: add a CloudFront Function that rewrites extensionless routes to their exported index.html object and return a real 404 for missing content.
+Frontend dependency conflict
+npm ci failed because the ESLint configuration did not match the project's Next.js/ESLint dependency versions.
+Resolution: align eslint-config-next with the chosen Next.js version and regenerate the lockfile.
+Slow frontend tests
+Two RoleSkillsBoard tests exceeded the existing local timeout.
+Resolution: increase the timeout only for the affected tests rather than globally weakening test timing.
+Coverage gap
+Initial frontend coverage was below the desired threshold.
+Resolution: add targeted API, skill-detail, admin-store, and admin-page tests instead of lowering the quality gate.
+Malformed AWS CLI Lambda payload
+An early Lambda CLI invocation failed because the JSON payload was malformed.
+Resolution: correct the JSON payload and re-run the invocation.
+API Gateway 429 during debugging
+The API returned HTTP 429 during early endpoint testing.
+Resolution: inspect the deployed API Gateway stage/route configuration and remove configuration confusion before continuing production verification.
+Admin video persistence gap
+The original admin feature stored overrides in browser localStorage, which meant changes were not shared across users.
+Resolution: move production overrides to DynamoDB and protect writes with Cognito group authorization.
+Stale local Python tool launchers
+mypy.exe, bandit.exe, and pytest.exe still referenced an older Skillgraph-ai virtual-environment path after the project directory changed.
+Resolution: invoke the installed tools through the active Python interpreter using python -m ....
+10. Quality gates
+Backend
+Required checks:
+ruff check app tests
+mypy app --ignore-missing-imports --no-error-summary
+bandit -r app --severity-level=medium
+pytest --cov=app --cov-fail-under=80 tests/
+pip-audit --desc
+Frontend
+Required checks:
+npm ci
+npx tsc --noEmit
+npm run lint
+npm audit --audit-level=moderate
+npm run test -- --run --coverage
+Infrastructure
+Required checks:
+terraform fmt -check -recursive
+terraform validate
+Production must not be deployed when CI quality gates fail.
+11. Competition submission readiness
+AWS Builder Zero to Shipped requires the submission to include:
+- a live application on AWS reachable through a public URL;
+- documented proof that a coding agent was connected to the AWS console;
+- a published AWS Builder Center project describing the application, development process, and use of the coding agent;
+- one app category tag;
+- one focus-lane tag;
+- an original application that meets the hackathon's originality requirement;
+- documentation of AWS services and coding-agent use.
+Selected classification
+Category: #social-good
+Lane:    #community
+Submission evidence to attach or link
+1. Live AWS URL.
+2. Public GitHub repository.
+3. Screenshot/log proving the coding agent connection to the AWS console.
+4. Screenshot of a successful GitHub Actions CI run.
+5. Screenshot/log of the successful Production CD run.
+6. Terraform validation/deployment evidence where useful.
+7. Production architecture diagram.
+8. Screenshots of the core product flow.
+9. Screenshot of production Cognito admin login and recommended-video editing, without exposing passwords or tokens.
+10. Final test/coverage summary.
+Do not publish credentials, access tokens, private AWS information, GitHub secrets, or local .env.local contents in the submission.
+12. AI-assisted development record
+Claude Code
+Used as a repository-level coding agent for coordinated implementation across frontend, backend, Terraform, tests, and deployment-related files.
+GitHub Copilot
+Used for inline implementation assistance, code completion, test generation, and repetitive coding work.
+OpenAI / Codex / Chat Codex
+Used for architecture reasoning, debugging, code review, failure analysis, command-by-command validation, and deployment troubleshooting.
+GitHub Actions
+Used as the automation engine for CI/CD. It is not itself a coding agent; it executes the project's automated quality gates and production deployment workflow.
+For the AWS Builder submission, identify the specific agent that was connected to the AWS console and attach the actual screenshot/log evidence for that connection.
+13. Final readiness checklist
+- [x] Application is live on AWS.
+- [x] Public CloudFront URL verified.
+- [x] Production admin login works through Cognito.
+- [x] Cognito admin group exists and was verified.
+- [x] Recommended-video overrides persist in DynamoDB.
+- [x] Production deployment completed through CI/CD.
+- [x] Terraform formatting and validation passed.
+- [x] Backend tests passed above the required coverage.
+- [x] Frontend tests passed above the required coverage.
+- [x] npm audit reported zero vulnerabilities.
+- [x] Production/local authentication paths are separated.
+- [x] Local credentials are excluded from Git.
+- [ ] Add the actual AWS-console coding-agent proof to submission materials.
+- [ ] Ensure the final submission article is published on AWS Builder Center.
+- [ ] Ensure the final category/lane tags are applied on Builder Center.
+14. Documentation synchronization requirement
+Before the final competition submission, keep plan.md, README.md, workflow files, and the actual AWS deployment model consistent.
+Do not leave older references that claim:
+- Vercel is the current production platform;
+- production AWS deployment is still unverified;
+- Cognito is not integrated;
+- admin video overrides are localStorage-only;
+- AWS resources are merely proposed.
+The public repository should describe the same production architecture and deployment flow that the judges can actually reach through the live application.

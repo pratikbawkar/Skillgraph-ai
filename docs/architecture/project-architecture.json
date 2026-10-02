@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Skill Orbit | End-to-end architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 790],
+    "views": [
+      {
+        "id": "runtime",
+        "label": "Application runtime",
+        "focus": ["learner", "cdn", "frontend", "api_gateway", "lambda", "database", "youtube"],
+        "note": "Follow a learner request through the static app, API, current persistence path, and learning links."
+      },
+      {
+        "id": "delivery",
+        "label": "Build and deploy",
+        "focus": ["actions", "terraform", "cdn", "api_gateway", "lambda"],
+        "note": "Inspect GitHub Actions, the production Terraform root, and the AWS resources it defines."
+      },
+      {
+        "id": "identity-data",
+        "label": "Identity and data status",
+        "focus": ["frontend", "cognito", "lambda", "database"],
+        "note": "Separate configured AWS services from application integrations that are still pending."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "actions",
+      "type": "messagebus",
+      "label": "GitHub Actions",
+      "sublabel": "develop CI · main production CD",
+      "brand": "github-actions",
+      "pos": [30, 70],
+      "size": [150, 90]
+    },
+    {
+      "id": "terraform",
+      "type": "backend",
+      "label": "Terraform",
+      "sublabel": "prod root · IaC",
+      "brand": "terraform",
+      "pos": [220, 70],
+      "size": [150, 90]
+    },
+    {
+      "id": "learner",
+      "type": "external",
+      "label": "Learner browser",
+      "sublabel": "HTTPS entry point",
+      "pos": [30, 350],
+      "size": [150, 90]
+    },
+    {
+      "id": "cdn",
+      "type": "cloud",
+      "label": "CloudFront + S3",
+      "sublabel": "private static site",
+      "pos": [208, 350],
+      "size": [150, 90]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Next.js frontend",
+      "sublabel": "TypeScript · React",
+      "brand": "next-js",
+      "pos": [386, 350],
+      "size": [150, 90]
+    },
+    {
+      "id": "api_gateway",
+      "type": "cloud",
+      "label": "API Gateway",
+      "sublabel": "AWS HTTP API",
+      "pos": [564, 350],
+      "size": [150, 90]
+    },
+    {
+      "id": "lambda",
+      "type": "backend",
+      "label": "FastAPI · Lambda",
+      "sublabel": "Python 3.11 · ARM64 · Mangum",
+      "brand": "python",
+      "pos": [742, 350],
+      "size": [150, 90]
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "label": "DynamoDB tables",
+      "sublabel": "users · progress · admin videos",
+      "pos": [742, 590],
+      "size": [150, 90]
+    },
+    {
+      "id": "cognito",
+      "type": "security",
+      "label": "Amazon Cognito",
+      "sublabel": "pool · web client · admin group",
+      "pos": [386, 590],
+      "size": [150, 90]
+    },
+    {
+      "id": "youtube",
+      "type": "external",
+      "label": "YouTube",
+      "sublabel": "opens configured video URL",
+      "brand": "youtube",
+      "pos": [30, 590],
+      "size": [150, 90]
+    },
+    {
+      "id": "operations",
+      "type": "cloud",
+      "label": "AWS monitoring",
+      "sublabel": "SNS · monthly Budget",
+      "pos": [920, 590],
+      "size": [150, 90]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "AWS · ap-south-1",
+      "wraps": ["cdn", "api_gateway", "lambda", "database", "cognito", "operations"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    { "id": "ci-to-iac", "from": "actions", "to": "terraform", "label": "main CD" },
+    { "id": "learner-to-cdn", "from": "learner", "to": "cdn", "label": "HTTPS", "labelAt": [194, 454] },
+    { "id": "cdn-to-app", "from": "cdn", "to": "frontend", "label": "static", "labelAt": [326, 454] },
+    { "id": "app-to-api", "from": "frontend", "to": "api_gateway", "label": "HTTP", "labelDy": 60 },
+    { "id": "api-to-lambda", "from": "api_gateway", "to": "lambda", "label": "invoke", "labelAt": [728, 454] },
+    { "id": "api-to-data", "from": "lambda", "to": "database", "label": "adapter pending", "variant": "dashed", "labelDx": -85, "labelDy": 24 },
+    { "id": "app-to-cognito", "from": "frontend", "to": "cognito", "label": "admin only", "variant": "dashed", "labelAt": [461, 454] },
+    { "id": "app-to-youtube", "from": "frontend", "to": "youtube" }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Configured versus integrated",
+      "items": [
+        "Terraform defines AWS resources; repository evidence does not confirm an applied or live deployment.",
+        "Learner auth currently uses mock tokens, and backend repositories are in-memory; Cognito and DynamoDB integration remains pending."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Content links",
+      "items": [
+        "Skill pages open their configured YouTube URL directly.",
+        "Seed data contains draft placeholder video URLs, so official-channel curation is not confirmed."
+      ]
+    }
+  ]
+}

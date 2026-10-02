@@ -1,0 +1,127 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Learner login, role, and video workflow",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "learner", "label": "Learner" },
+    { "id": "frontend", "label": "Skill Orbit frontend" },
+    { "id": "backend", "label": "Current learner auth" },
+    { "id": "identity_target", "label": "Planned learner identity path" },
+    { "id": "learning", "label": "Learning resource" }
+  ],
+  "phases": [
+    { "id": "sign_in", "label": "Sign in", "fromCol": 0, "toCol": 2 },
+    { "id": "select_role", "label": "Choose a role", "fromCol": 3, "toCol": 3 },
+    { "id": "learn", "label": "Open a recommended video", "fromCol": 4, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["login", "current_auth", "session_home", "cloud_engineer", "skill_detail", "youtube"],
+  "semanticChecks": {
+    "allowedRoots": ["login"],
+    "allowedTerminals": ["youtube", "cognito_target"]
+  },
+  "nodes": [
+    {
+      "id": "login",
+      "lane": "frontend",
+      "col": 0,
+      "type": "frontend",
+      "label": "Login form",
+      "sublabel": "email + password",
+      "brand": "next-js",
+      "width": 170
+    },
+    {
+      "id": "current_auth",
+      "lane": "backend",
+      "col": 1,
+      "type": "backend",
+      "label": "Current auth path",
+      "sublabel": "mock token or FastAPI HMAC",
+      "brand": "fastapi",
+      "width": 185
+    },
+    {
+      "id": "cognito_target",
+      "lane": "identity_target",
+      "col": 1,
+      "type": "security",
+      "label": "Amazon Cognito",
+      "sublabel": "email username · learner wiring pending",
+      "width": 190
+    },
+    {
+      "id": "session_home",
+      "lane": "frontend",
+      "col": 2,
+      "type": "frontend",
+      "label": "Session stored · home",
+      "sublabel": "user + token → localStorage → /",
+      "width": 185
+    },
+    {
+      "id": "cloud_engineer",
+      "lane": "frontend",
+      "col": 3,
+      "type": "frontend",
+      "label": "Cloud Engineer card",
+      "sublabel": "link → /roles/cloud-engineer",
+      "width": 190
+    },
+    {
+      "id": "skill_detail",
+      "lane": "frontend",
+      "col": 4,
+      "type": "frontend",
+      "label": "Skill detail · video",
+      "sublabel": "title + configured YouTube URL",
+      "width": 190
+    },
+    {
+      "id": "youtube",
+      "lane": "learning",
+      "col": 5,
+      "type": "external",
+      "label": "YouTube",
+      "sublabel": "direct link · opens new tab",
+      "brand": "youtube",
+      "width": 170
+    }
+  ],
+  "edges": [
+    { "from": "login", "to": "current_auth", "label": "USE_MOCKS selects behavior", "role": "main" },
+    { "from": "login", "to": "cognito_target", "label": "target: email + password", "role": "branch", "variant": "dashed" },
+    { "from": "current_auth", "to": "session_home", "label": "returns user + token", "role": "main" },
+    { "from": "session_home", "to": "cloud_engineer", "label": "return home · choose role", "role": "main" },
+    { "from": "cloud_engineer", "to": "skill_detail", "label": "open roadmap · tap a skill", "role": "main" },
+    { "from": "skill_detail", "to": "youtube", "label": "click configured video URL", "role": "main", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Cognito versus current learner sign-in",
+      "items": [
+        "With NEXT_PUBLIC_USE_MOCKS=true, the frontend returns a mock-token. With it false, POST /auth/login reaches FastAPI, which still issues a mock HMAC token.",
+        "The Terraform Cognito pool/client are configured, but learner login is not wired to them. Cognito is used by the separate admin login path."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Cloud Engineer navigation",
+      "items": [
+        "The home role card links to /roles/cloud-engineer; its roadmap opens skill details under that role route.",
+        "The detail page uses an admin video override when present, otherwise the skill's seeded learningResource title and URL."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "YouTube handoff",
+      "items": [
+        "The video anchor opens its configured URL directly in a new tab; the app does not search YouTube or proxy playback.",
+        "Example seed: “DRAFT: Linux Fundamentals for Cloud Engineers”. Placeholder URLs exist, and official-channel status is not enforced."
+      ]
+    }
+  ]
+}
