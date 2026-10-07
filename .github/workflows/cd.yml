@@ -47,7 +47,7 @@ jobs:
         run: bash infrastructure/scripts/package-lambda.sh
 
       - name: Configure AWS credentials through GitHub OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_PRODUCTION_ROLE_ARN }}
           aws-region: ap-south-1
