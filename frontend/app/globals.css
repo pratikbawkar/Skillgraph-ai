@@ -1,6 +1,25 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #6366f1;
+  --color-brand-dark: #4338ca;
+  --color-brand-light: #e0e7ff;
+  --color-role-cloud: #0ea5e9;
+  --color-role-devops: #f59e0b;
+  --color-role-python: #10b981;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+}
 
 html,
 body {
